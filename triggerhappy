@@ -15,6 +15,13 @@ $KEYREAD | while read TYPE KEY VALUE; do
     [ $VERBOSE -gt 0 ] && echo "Searching for $SCRIPT"
     [ -f "$SCRIPT" -a -x "$SCRIPT" ] && {
         [ $VERBOSE -gt 0 ] && echo "Launching $SCRIPT..."
-        $SCRIPT "$TYPE" "$KEY" "$VALUE" &
+        "$SCRIPT" "$TYPE" "$KEY" "$VALUE" &
+    }
+    [ -d "$SCRIPT" ] && {
+        for PROG in "$SCRIPT/*"; do
+            [ -f "$PROG" -a -x "$PROG" ] && {
+                "$PROG" "$TYPE" "$KEY" "$VALUE" &
+            }
+        done
     }
 done
