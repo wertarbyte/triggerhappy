@@ -1,0 +1,20 @@
+#!/bin/sh
+
+CONF="${1}"
+
+KEYREAD=keyread
+SCRIPTDIR=/etc/triggerhappy/
+VERBOSE=1
+
+[ -e "$CONF" ] && . "$CONF"
+
+$KEYREAD | while read TYPE KEY VALUE; do
+    [ "$TYPE" = "EV_KEY" -a "$VALUE" = "1" ] || continue;
+
+    SCRIPT="$SCRIPTDIR/$KEY"
+    [ $VERBOSE -gt 0 ] && echo "Searching for $SCRIPT"
+    [ -f "$SCRIPT" -a -x "$SCRIPT" ] && {
+        [ $VERBOSE -gt 0 ] && echo "Launching $SCRIPT..."
+        $SCRIPT "$TYPE" "$KEY" "$VALUE" &
+    }
+done
