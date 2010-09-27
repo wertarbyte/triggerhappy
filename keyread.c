@@ -26,6 +26,7 @@ int main(int argc, char *argv[]) {
     dev = open(devname, O_RDONLY);
     if (dev < 0) {
         fprintf(stderr, "Unable to open device file\n");
+        return 1;
     } else {
         struct input_event ev;
         while(1) {
