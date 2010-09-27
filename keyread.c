@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <string.h>
+#include <errno.h>
 
 #include <linux/input.h>
 
@@ -25,7 +26,7 @@ int main(int argc, char *argv[]) {
     int dev;
     dev = open(devname, O_RDONLY);
     if (dev < 0) {
-        fprintf(stderr, "Unable to open device file\n");
+        fprintf(stderr, "Unable to open device file '%s': %s\n", devname, strerror(errno));
         return 1;
     } else {
         struct input_event ev;
