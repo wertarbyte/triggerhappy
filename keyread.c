@@ -26,12 +26,13 @@ void print_event(struct input_event ev, char *evnames[], int maxcode) {
     fflush(stdout);
 }
 
-int read_events(char *devname) {
+void* read_events(void *nameptr) {
+    char *devname;
+    devname = (char *) nameptr;
     int dev;
     dev = open(devname, O_RDONLY);
     if (dev < 0) {
         fprintf(stderr, "Unable to open device file '%s': %s\n", devname, strerror(errno));
-        return 1;
     } else {
         struct input_event ev;
         while(1) {
@@ -49,7 +50,6 @@ int read_events(char *devname) {
             }
         }
         close(dev);
-        return 0;
     }
 }
 
@@ -61,7 +61,8 @@ int main(int argc, char *argv[]) {
         pthread_t threads[ argc-1 ];
         int i;
         for (i=0; i<argc-1; i++) {
-            int rc = pthread_create( &threads[i], NULL, &read_events, argv[i+1] );
+            char *dev = argv[i+1];
+            int rc = pthread_create( &threads[i], NULL, &read_events, (void *)dev );
             assert(rc==0);
         }
         for (i=0; i<argc-1; i++) {
