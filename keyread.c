@@ -17,6 +17,13 @@ void print_key_event(struct input_event ev) {
     fflush(stdout);
 }
 
+void print_sw_event(struct input_event ev) {
+    char *typename = EV_NAME[ ev.type ];
+    char *swname = SW_NAME[ ev.code];
+    printf( "%s\t%s\t%d\n", typename, swname, ev.value );
+    fflush(stdout);
+}
+
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "No input device file specified.\n");
@@ -39,6 +46,9 @@ int main(int argc, char *argv[]) {
             // key pressed
             if ( ev.type == EV_KEY) {
                 print_key_event( ev );
+            }
+            if ( ev.type == EV_SW ) {
+                print_sw_event( ev );
             }
         }
         close(dev);
