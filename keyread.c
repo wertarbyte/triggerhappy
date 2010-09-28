@@ -35,12 +35,14 @@ void print_keystate() {
     int i;
     int n = 0;
     printf("STATE\t");
+    pthread_mutex_lock( &keystate_mutex );
     for (i=0; i<=KEY_MAX; i++) {
         if (keystate[i] > 0) {
             printf("%s%s", (n>0?"+":""), KEY_NAME[i]);
             n++;
         }
     }
+    pthread_mutex_unlock( &keystate_mutex );
     printf("\n");
 }
 
