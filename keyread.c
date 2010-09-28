@@ -16,7 +16,7 @@
 #include "eventnames.h"
 
 pthread_mutex_t keystate_mutex = PTHREAD_MUTEX_INITIALIZER;
-int keystate[KEY_MAX] = { 0 };
+unsigned int keystate[KEY_MAX] = { 0 };
 
 void change_keystate( int key, int value ) {
     pthread_mutex_lock( &keystate_mutex );
@@ -25,7 +25,9 @@ void change_keystate( int key, int value ) {
             keystate[key]++;
             break;
         case 0: // released
-            keystate[key]--;
+            if (keystate[key] > 0) {
+                keystate[key]--;
+            }
             break;
     }
     pthread_mutex_unlock( &keystate_mutex );
