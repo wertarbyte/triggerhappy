@@ -6,7 +6,10 @@
 #include <string.h>
 #include <errno.h>
 
+#include <stdlib.h>
 #include <linux/input.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "eventnames.h"
 
@@ -25,8 +28,38 @@ int main(int argc, char *argv[]) {
     if (argc < 2) {
         fprintf(stderr, "No input device file specified.\n");
         return 1;
+    } else {
+        // return read_events( argv[1] );
+        int pids[ argc-1 ];
+        int i;
+        for (i=1; i<argc; i++) {
+            pids[i-1] = fork_reader( argv[i] );
+        }
+        // wait until all children are dead
+        for (i=0; i<argc; i++) {
+            if (pids[i] != 0) {
+                waitpid( pids[i], NULL, 0 );
+            }
+        }
     }
-    char *devname = argv[1];
+}
+
+int fork_reader(char *devname) {
+    int pid = fork();
+    if (pid > 0) {
+        // parent
+        return pid;
+    } else if (pid == 0) {
+        // child
+        read_events( devname );
+        exit(0);
+    } else {
+        fprintf( stderr, "Error forking for device '%s'\n", devname );
+    }
+    return 0;
+}
+
+int read_events(char *devname) {
     int dev;
     dev = open(devname, O_RDONLY);
     if (dev < 0) {
