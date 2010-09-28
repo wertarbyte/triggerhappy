@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pthread.h>
+#include <assert.h>
 
 #include "eventnames.h"
 
@@ -27,8 +28,6 @@ void print_event(struct input_event ev, char *evnames[], int maxcode) {
 
 int read_events(char *devname) {
     int dev;
-    fprintf(stderr, "Hi, it's a thread for %s\n", devname);
-    fflush(stderr);
     dev = open(devname, O_RDONLY);
     if (dev < 0) {
         fprintf(stderr, "Unable to open device file '%s': %s\n", devname, strerror(errno));
@@ -62,10 +61,12 @@ int main(int argc, char *argv[]) {
         pthread_t threads[ argc-1 ];
         int i;
         for (i=0; i<argc-1; i++) {
-            pthread_create( &threads[i], NULL, &read_events, (void *) argv[i+1] );
+            int rc = pthread_create( &threads[i], NULL, &read_events, argv[i+1] );
+            assert(rc==0);
         }
         for (i=0; i<argc-1; i++) {
-            pthread_join(threads[i], NULL);
+            int rc = pthread_join(threads[i], NULL);
+            assert(rc==0);
         }
     }
     return 0;
