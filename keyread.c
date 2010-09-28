@@ -10,10 +10,14 @@
 
 #include "eventnames.h"
 
-void print_event(struct input_event ev, char *evnames[]) {
+void print_event(struct input_event ev, char *evnames[], int maxcode) {
     char *typename = EV_NAME[ ev.type ];
-    char *evname = evnames[ ev.code ];
-    printf( "%s\t%s\t%d\n", typename, evname, ev.value );
+    char *evname = (maxcode >= ev.code ? evnames[ ev.code ] : NULL);
+    if ( evname != NULL ) {
+        printf( "%s\t%s\t%d\n", typename, evname, ev.value );
+    } else {
+        fprintf( stderr, "Unknown %s event id: %d (value %d)\n", typename, ev.code, ev.value );
+    }
     fflush(stdout);
 }
 
@@ -38,10 +42,10 @@ int main(int argc, char *argv[]) {
             }
             // key pressed
             if ( ev.type == EV_KEY) {
-                print_event( ev, KEY_NAME );
+                print_event( ev, KEY_NAME, KEY_MAX );
             }
             if ( ev.type == EV_SW ) {
-                print_event( ev, SW_NAME );
+                print_event( ev, SW_NAME, SW_MAX );
             }
         }
         close(dev);
