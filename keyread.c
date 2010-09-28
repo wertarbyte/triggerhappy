@@ -10,17 +10,10 @@
 
 #include "eventnames.h"
 
-void print_key_event(struct input_event ev) {
+void print_event(struct input_event ev, char *evnames[]) {
     char *typename = EV_NAME[ ev.type ];
-    char *keyname = KEY_NAME[ ev.code ];
-    printf( "%s\t%s\t%d\n", typename, keyname, ev.value );
-    fflush(stdout);
-}
-
-void print_sw_event(struct input_event ev) {
-    char *typename = EV_NAME[ ev.type ];
-    char *swname = SW_NAME[ ev.code];
-    printf( "%s\t%s\t%d\n", typename, swname, ev.value );
+    char *evname = evnames[ ev.code ];
+    printf( "%s\t%s\t%d\n", typename, evname, ev.value );
     fflush(stdout);
 }
 
@@ -45,10 +38,10 @@ int main(int argc, char *argv[]) {
             }
             // key pressed
             if ( ev.type == EV_KEY) {
-                print_key_event( ev );
+                print_event( ev, KEY_NAME );
             }
             if ( ev.type == EV_SW ) {
-                print_sw_event( ev );
+                print_event( ev, SW_NAME );
             }
         }
         close(dev);
