@@ -15,6 +15,35 @@
 
 #include "eventnames.h"
 
+pthread_mutex_t keystate_mutex = PTHREAD_MUTEX_INITIALIZER;
+int keystate[KEY_MAX] = { 0 };
+
+void change_keystate( int key, int value ) {
+    pthread_mutex_lock( &keystate_mutex );
+    switch(value) {
+        case 1: // pressed
+            keystate[key]++;
+            break;
+        case 0: // released
+            keystate[key]--;
+            break;
+    }
+    pthread_mutex_unlock( &keystate_mutex );
+}
+
+void print_keystate() {
+    int i;
+    int n = 0;
+    printf("STATE\t");
+    for (i=0; i<=KEY_MAX; i++) {
+        if (keystate[i] > 0) {
+            printf("%s%s", (n>0?"+":""), KEY_NAME[i]);
+            n++;
+        }
+    }
+    printf("\n");
+}
+
 void print_event(struct input_event ev, char *evnames[], int maxcode) {
     char *typename = EV_NAME[ ev.type ];
     char *evname = (maxcode >= ev.code ? evnames[ ev.code ] : NULL);
@@ -44,6 +73,8 @@ void* read_events(void *nameptr) {
             // key pressed
             if ( ev.type == EV_KEY) {
                 print_event( ev, KEY_NAME, KEY_MAX );
+                change_keystate( ev.code, ev.value );
+                print_keystate();
             }
             if ( ev.type == EV_SW ) {
                 print_event( ev, SW_NAME, SW_MAX );
