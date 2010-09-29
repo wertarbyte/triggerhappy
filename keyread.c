@@ -23,7 +23,13 @@
 
 #include <pthread.h>
 
-pthread_mutex_t keystate_mutex = PTHREAD_MUTEX_INITIALIZER;
+// PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP looks like a GNU thing
+#ifndef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
+#define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \
+  { { 0, 0, 0, PTHREAD_MUTEX_RECURSIVE_NP, 0, { 0 } } }
+#endif
+
+pthread_mutex_t keystate_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 #define LOCK(mutex) pthread_mutex_lock(mutex)
 #define UNLOCK(mutex) pthread_mutex_unlock(mutex)
@@ -104,10 +110,12 @@ int read_events(char *devname) {
             }
             // key event
             if ( ev.type == EV_KEY) {
-                print_event( ev, KEY_NAME, KEY_MAX );
+                LOCK( &keystate_mutex );
                 change_keystate( ev.code, ev.value );
                 // print name of all currently held keys
                 print_keystate();
+                print_event( ev, KEY_NAME, KEY_MAX );
+                UNLOCK( &keystate_mutex );
             }
             // switch event
             if ( ev.type == EV_SW ) {
