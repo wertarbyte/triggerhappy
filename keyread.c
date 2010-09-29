@@ -1,3 +1,8 @@
+/*
+ * keyread.c
+ * by Stefan Tomanek <stefan.tomanek@wertarbyte.de>
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
@@ -22,6 +27,9 @@ pthread_mutex_t keystate_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 unsigned int keystate[KEY_MAX] = { 0 };
 
+/*
+ * Keep track of a pressed or released key
+ */
 void change_keystate( int key, int value ) {
 #ifdef THREADED
     pthread_mutex_lock( &keystate_mutex );
@@ -41,6 +49,9 @@ void change_keystate( int key, int value ) {
 #endif
 }
 
+/*
+ * Print the concatenated names of all currently pressed keys
+ */
 void print_keystate() {
     int i;
     int n = 0;
@@ -60,6 +71,9 @@ void print_keystate() {
     printf("\n");
 }
 
+/*
+ * Look up event and key names and print them to STDOUT
+ */
 void print_event(struct input_event ev, char *evnames[], int maxcode) {
     char *typename = EV_NAME[ ev.type ];
     char *evname = (maxcode >= ev.code ? evnames[ ev.code ] : NULL);
@@ -71,6 +85,10 @@ void print_event(struct input_event ev, char *evnames[], int maxcode) {
     fflush(stdout);
 }
 
+/*
+ * Read events from device file, decode them and print them to STDOUT as well
+ * as keep track of key status
+ */
 int read_events(char *devname) {
     int dev;
     dev = open(devname, O_RDONLY);
@@ -85,12 +103,14 @@ int read_events(char *devname) {
                 fprintf(stderr, "Read error\n");
                 return 1;
             }
-            // key pressed
+            // key event
             if ( ev.type == EV_KEY) {
                 print_event( ev, KEY_NAME, KEY_MAX );
                 change_keystate( ev.code, ev.value );
+                // print name of all currently held keys
                 print_keystate();
             }
+            // switch event
             if ( ev.type == EV_SW ) {
                 print_event( ev, SW_NAME, SW_MAX );
             }
@@ -114,6 +134,7 @@ int main(int argc, char *argv[]) {
         return 1;
     } else {
 #if THREADED
+        // create one thread for every device file supplied
         pthread_t threads[ argc-1 ];
         int i;
         for (i=0; i<argc-1; i++) {
@@ -126,6 +147,7 @@ int main(int argc, char *argv[]) {
             assert(rc==0);
         }
 #else
+        // without threading, we only handle the first device file named
         read_events( argv[1] );
 #endif
     }
