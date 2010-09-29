@@ -1,5 +1,5 @@
 keyread: keyread.c eventnames.h
-	gcc -DTHREADED -o $@ -lpthread $<
+	gcc -o $@ -lpthread $<
 
 clean:
 	rm keyread

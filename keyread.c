@@ -15,25 +15,30 @@
 #include <linux/input.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#ifdef THREADED
-#include <pthread.h>
-#endif
 #include <assert.h>
 
 #include "eventnames.h"
 
-#ifdef THREADED
+#ifndef NOTHREADS
+
+#include <pthread.h>
+
 pthread_mutex_t keystate_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+#define LOCK(mutex) pthread_mutex_lock(mutex)
+#define UNLOCK(mutex) pthread_mutex_unlock(mutex)
+#else
+#define LOCK(mutex)
+#define UNLOCK(mutex)
 #endif
+
 unsigned int keystate[KEY_MAX] = { 0 };
 
 /*
  * Keep track of a pressed or released key
  */
 void change_keystate( int key, int value ) {
-#ifdef THREADED
-    pthread_mutex_lock( &keystate_mutex );
-#endif
+    LOCK( &keystate_mutex );
     switch(value) {
         case 1: // pressed
             keystate[key]++;
@@ -44,9 +49,7 @@ void change_keystate( int key, int value ) {
             }
             break;
     }
-#ifdef THREADED
-    pthread_mutex_unlock( &keystate_mutex );
-#endif
+    UNLOCK( &keystate_mutex );
 }
 
 /*
@@ -56,18 +59,14 @@ void print_keystate() {
     int i;
     int n = 0;
     printf("STATE\t");
-#ifdef THREADED
-    pthread_mutex_lock( &keystate_mutex );
-#endif
+    LOCK( &keystate_mutex );
     for (i=0; i<=KEY_MAX; i++) {
         if (keystate[i] > 0) {
             printf("%s%s", (n>0?"+":""), KEY_NAME[i]);
             n++;
         }
     }
-#ifdef THREADED
-    pthread_mutex_unlock( &keystate_mutex );
-#endif
+    UNLOCK( &keystate_mutex );
     printf("\n");
 }
 
@@ -120,7 +119,7 @@ int read_events(char *devname) {
     return 0;
 }
 
-#ifdef THREADED
+#ifndef NOTHREADS
 void* reader_thread(void* ptr) {
     char *devname;
     devname = (char *) ptr;
@@ -133,7 +132,7 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "No input device file specified.\n");
         return 1;
     } else {
-#if THREADED
+#ifndef NOTHREADS
         // create one thread for every device file supplied
         pthread_t threads[ argc-1 ];
         int i;
