@@ -41,7 +41,8 @@ pthread_mutex_t keystate_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 #endif // NOTHREADS
 
-static const char* script_basedir = "/tmp/triggerhappy/";
+static char* script_basedir = NULL;
+static int dump_events = 0;
 
 char* lookup_event_name(struct input_event ev) {
 	if (ev.type == EV_KEY) {
@@ -87,9 +88,13 @@ int read_events(char *devname) {
 			/* ignore all events except KEY and SW */
 			if (ev.type == EV_KEY || ev.type == EV_SW) {
 				LOCK(keystate_mutex);
-				print_event( ev );
 				change_keystate( ev.code, ev.value );
-				launch_script( script_basedir, ev );
+				if (dump_events) {
+					print_event( ev );
+					print_keystate();
+				}
+				if (script_basedir != NULL)
+					launch_script( script_basedir, ev );
 				UNLOCK(keystate_mutex);
 			}
 		}
@@ -107,26 +112,50 @@ void* reader_thread(void* ptr) {
 #endif
 
 int main(int argc, char *argv[]) {
-	if (argc < 2) {
+	int c;
+	while ((c = getopt(argc, argv, "ds:")) != -1) {
+		switch (c) {
+			case 'd':
+				dump_events = 1;
+				break;
+			case 's':
+				script_basedir = optarg;
+				break;
+			case '?':
+				if (optopt == 's') {
+					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+				} else if (isprint(optopt)) {
+					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+				} else {
+					fprintf(stderr, "Unknown option character\n");
+				}
+				return 1;
+		}
+	}
+	return start_readers(argc, argv, optind);
+}
+
+int start_readers(int argc, char *argv[], int start) {
+	if (argc-start < 1) {
 		fprintf(stderr, "No input device file specified.\n");
 		return 1;
 	} else {
 #ifndef NOTHREADS
 		// create one thread for every device file supplied
-		pthread_t threads[ argc-1 ];
+		pthread_t threads[ (argc-start)-1 ];
 		int i;
-		for (i=0; i<argc-1; i++) {
-			char *dev = argv[i+1];
+		for (i=start; i<argc; i++) {
+			char *dev = argv[i];
 			int rc = pthread_create( &threads[i], NULL, &reader_thread, (void *)dev );
 			assert(rc==0);
 		}
-		for (i=0; i<argc-1; i++) {
+		for (i=start; i<argc; i++) {
 			int rc = pthread_join(threads[i], NULL);
 			assert(rc==0);
 		}
 #else
 		// without threading, we only handle the first device file named
-		read_events( argv[1] );
+		read_events( argv[start] );
 #endif
 	}
 	return 0;
