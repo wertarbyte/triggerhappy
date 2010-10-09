@@ -8,3 +8,17 @@ Triggerhappy is a hotkey daemon developed with small and embedded systems in
 mind, e.g. linux based routers. It attaches to the input device files and
 interprets the event data received and executes scripts placed in its
 configuration directory.
+
+Examples:
+
+Dump all events received through two device files:
+
+	thd -d /dev/input/event0 /dev/input/event1
+
+Read from /dev/input/event0 and launch scripts from /etc/triggerhappy/:
+
+	thd -s /etc/triggerhappy/ /dev/input/event0
+
+The daemon launches scripts that correspond to event name received; On pressing
+the Enter key, thd launches /etc/triggerhappy/KEY_ENTER if present.
+
