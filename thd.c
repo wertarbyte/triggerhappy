@@ -15,6 +15,8 @@
 #include <sys/wait.h>
 
 #include "eventnames.h"
+#include "keystate.h"
+#include "executer.h"
 
 #ifndef NOTHREADS
 
@@ -39,12 +41,24 @@ pthread_mutex_t keystate_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
 #endif // NOTHREADS
 
+static const char* script_basedir = "/tmp/triggerhappy/";
+
+char* lookup_event_name(struct input_event ev) {
+	if (ev.type == EV_KEY) {
+		return (KEY_MAX >= ev.code ? KEY_NAME[ ev.code ] : NULL);
+	}
+	if (ev.type == EV_SW) {
+		return (SW_MAX >= ev.code ? SW_NAME[ ev.code ] : NULL);
+	}
+	return NULL;
+}
+
 /*
  * Look up event and key names and print them to STDOUT
  */
-void print_event(struct input_event ev, char *evnames[], int maxcode) {
+void print_event(struct input_event ev) {
 	char *typename = EV_NAME[ ev.type ];
-	char *evname = (maxcode >= ev.code ? evnames[ ev.code ] : NULL);
+	char *evname = lookup_event_name( ev );
 	if ( evname != NULL ) {
 		printf( "%s\t%s\t%d\n", typename, evname, ev.value );
 	} else {
@@ -70,18 +84,13 @@ int read_events(char *devname) {
 				fprintf(stderr, "Read error\n");
 				return 1;
 			}
-			// key event
-			if ( ev.type == EV_KEY) {
+			/* ignore all events except KEY and SW */
+			if (ev.type == EV_KEY || ev.type == EV_SW) {
 				LOCK(keystate_mutex);
-				print_event( ev, KEY_NAME, KEY_MAX );
-				// keep track of the keyboard state
+				print_event( ev );
 				change_keystate( ev.code, ev.value );
-				print_keystate();
+				launch_script( script_basedir, ev );
 				UNLOCK(keystate_mutex);
-			}
-			// switch event
-			if ( ev.type == EV_SW ) {
-				print_event( ev, SW_NAME, SW_MAX );
 			}
 		}
 		close(dev);

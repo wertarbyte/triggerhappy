@@ -480,4 +480,7 @@ static char *SW_NAME[SW_MAX] = {
 	EV_MAP( SW_JACK_PHYSICAL_INSERT ),
 	EV_MAP( SW_VIDEOOUT_INSERT ),
 };
+
+char* lookup_event_name( struct input_event );
+
 #endif

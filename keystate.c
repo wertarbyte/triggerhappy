@@ -12,14 +12,19 @@ static unsigned int keystate[KEY_MAX] = {};
 /*
  * Keep track of a pressed or released key
  */
-void change_keystate( int key, int value ) {
-	switch(value) {
+void change_keystate( struct input_event ev) {
+	if (ev.type != EV_KEY)
+		return;
+	if (ev.code > KEY_MAX)
+		return;
+
+	switch(ev.value) {
 		case 1: // pressed
-			keystate[key]++;
+			keystate[ev.code]++;
 			break;
 		case 0: // released
-			if (keystate[key] > 0) {
-				keystate[key]--;
+			if (keystate[ev.code] > 0) {
+				keystate[ev.code]--;
 			}
 			break;
 	}
