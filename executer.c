@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <linux/input.h>
 #include <string.h>
+#include <unistd.h>
+#include <errno.h>
 #include "eventnames.h"
 #include "executer.h"
 
@@ -17,5 +20,18 @@ void launch_script( const char* basedir, struct input_event ev ) {
 	strcat(scriptpath, basedir);
 	strcat(scriptpath, "/");
 	strcat(scriptpath, keyname);
-	printf("Launching script '%s'\n", scriptpath);
+	// check if a script is present
+	if (access(scriptpath, X_OK) == 0) {
+		printf("Launching script '%s'\n", scriptpath);
+		int pid = fork();
+		if (pid < 0) {
+			printf("Error forking\n");
+		} else if (pid > 0) {
+			// parent, life goes on...
+		} else {
+			execl( scriptpath, keyname, keyname, (char*)0 );
+			printf("Unable to execute '%s': %s\n", scriptpath, strerror(errno));
+			exit(1);
+		}
+	}
 }

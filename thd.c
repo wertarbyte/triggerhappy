@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -112,6 +113,7 @@ void* reader_thread(void* ptr) {
 #endif
 
 int main(int argc, char *argv[]) {
+	signal(SIGCHLD, SIG_IGN);
 	int c;
 	while ((c = getopt(argc, argv, "ds:")) != -1) {
 		switch (c) {
