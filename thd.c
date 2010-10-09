@@ -1,5 +1,5 @@
 /*
- * keyread.c
+ * thd.c - the triggerhappy daemon
  * by Stefan Tomanek <stefan.tomanek@wertarbyte.de>
  */
 
@@ -12,69 +12,32 @@
 #include <errno.h>
 
 #include <stdlib.h>
-#include <linux/input.h>
-#include <sys/types.h>
 #include <sys/wait.h>
-#include <assert.h>
 
 #include "eventnames.h"
 
 #ifndef NOTHREADS
 
 #include <pthread.h>
+#include <assert.h>
 
 // PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP looks like a GNU thing
 #ifndef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
 #define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \
-  { { 0, 0, 0, PTHREAD_MUTEX_RECURSIVE_NP, 0, { 0 } } }
+{ { 0, 0, 0, PTHREAD_MUTEX_RECURSIVE_NP, 0, { 0 } } }
 #endif
 
 pthread_mutex_t keystate_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 
-#define LOCK(mutex) pthread_mutex_lock(mutex)
-#define UNLOCK(mutex) pthread_mutex_unlock(mutex)
+#define LOCK(mutex) pthread_mutex_lock(&mutex)
+#define UNLOCK(mutex) pthread_mutex_unlock(&mutex)
+
 #else
-#define LOCK(mutex)
-#define UNLOCK(mutex)
-#endif
 
-unsigned int keystate[KEY_MAX] = { 0 };
+#define LOCK(x) 
+#define UNLOCK(x)
 
-/*
- * Keep track of a pressed or released key
- */
-void change_keystate( int key, int value ) {
-	LOCK( &keystate_mutex );
-	switch(value) {
-		case 1: // pressed
-			keystate[key]++;
-			break;
-		case 0: // released
-			if (keystate[key] > 0) {
-				keystate[key]--;
-			}
-			break;
-	}
-	UNLOCK( &keystate_mutex );
-}
-
-/*
- * Print the concatenated names of all currently pressed keys
- */
-void print_keystate() {
-	int i;
-	int n = 0;
-	printf("STATE\t");
-	LOCK( &keystate_mutex );
-	for (i=0; i<=KEY_MAX; i++) {
-		if (keystate[i] > 0) {
-			printf("%s%s", (n>0?"+":""), KEY_NAME[i]);
-			n++;
-		}
-	}
-	UNLOCK( &keystate_mutex );
-	printf("\n");
-}
+#endif // NOTHREADS
 
 /*
  * Look up event and key names and print them to STDOUT
@@ -91,8 +54,7 @@ void print_event(struct input_event ev, char *evnames[], int maxcode) {
 }
 
 /*
- * Read events from device file, decode them and print them to STDOUT as well
- * as keep track of key status
+ * Read events from device file, decode them and print them to STDOUT
  */
 int read_events(char *devname) {
 	int dev;
@@ -110,12 +72,12 @@ int read_events(char *devname) {
 			}
 			// key event
 			if ( ev.type == EV_KEY) {
-				LOCK( &keystate_mutex );
-				change_keystate( ev.code, ev.value );
-				// print name of all currently held keys
-				print_keystate();
+				LOCK(keystate_mutex);
 				print_event( ev, KEY_NAME, KEY_MAX );
-				UNLOCK( &keystate_mutex );
+				// keep track of the keyboard state
+				change_keystate( ev.code, ev.value );
+				print_keystate();
+				UNLOCK(keystate_mutex);
 			}
 			// switch event
 			if ( ev.type == EV_SW ) {

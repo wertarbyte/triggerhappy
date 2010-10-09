@@ -1,8 +1,10 @@
+#ifndef EVENTNAMES_INC
+#define EVENTNAMES_INC
 #include <linux/input.h>
 
 #define EV_MAP( N ) [ N ] = #N
 
-char *EV_NAME[EV_MAX] = {
+static char *EV_NAME[EV_MAX] = {
 	EV_MAP( EV_SYN ),
 	EV_MAP( EV_KEY ),
 	EV_MAP( EV_REL ),
@@ -17,7 +19,7 @@ char *EV_NAME[EV_MAX] = {
 	EV_MAP( EV_FF_STATUS ),
 };
 
-char *KEY_NAME[KEY_MAX] = {
+static char *KEY_NAME[KEY_MAX] = {
 	EV_MAP( KEY_RESERVED ),
 	EV_MAP( KEY_ESC ),
 	EV_MAP( KEY_1 ),
@@ -467,7 +469,7 @@ char *KEY_NAME[KEY_MAX] = {
 	EV_MAP( BTN_GEAR_UP ),
 };
 
-char *SW_NAME[SW_MAX] = {
+static char *SW_NAME[SW_MAX] = {
 	EV_MAP( SW_LID ),
 	EV_MAP( SW_TABLET_MODE ),
 	EV_MAP( SW_HEADPHONE_INSERT ),
@@ -478,3 +480,4 @@ char *SW_NAME[SW_MAX] = {
 	EV_MAP( SW_JACK_PHYSICAL_INSERT ),
 	EV_MAP( SW_VIDEOOUT_INSERT ),
 };
+#endif
