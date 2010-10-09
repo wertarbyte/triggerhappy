@@ -22,15 +22,14 @@ void launch_script( const char* basedir, struct input_event ev ) {
 	strcat(scriptpath, keyname);
 	// check if a script is present
 	if (access(scriptpath, X_OK) == 0) {
-		printf("Launching script '%s'\n", scriptpath);
 		int pid = fork();
 		if (pid < 0) {
-			printf("Error forking\n");
+			fprintf(stderr, "Error forking\n");
 		} else if (pid > 0) {
 			// parent, life goes on...
 		} else {
 			execl( scriptpath, keyname, keyname, (char*)0 );
-			printf("Unable to execute '%s': %s\n", scriptpath, strerror(errno));
+			fprintf(stderr, "Unable to execute '%s': %s\n", scriptpath, strerror(errno));
 			exit(1);
 		}
 	}
