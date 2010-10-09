@@ -1,2 +1,2 @@
-void change_keystate(int code, int value);
+void change_keystate(struct input_event);
 void print_keystate();

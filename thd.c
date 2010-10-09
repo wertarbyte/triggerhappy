@@ -89,7 +89,7 @@ int read_events(char *devname) {
 			/* ignore all events except KEY and SW */
 			if (ev.type == EV_KEY || ev.type == EV_SW) {
 				LOCK(keystate_mutex);
-				change_keystate( ev.code, ev.value );
+				change_keystate( ev );
 				if (dump_events) {
 					print_event( ev );
 					print_keystate();
