@@ -16,13 +16,13 @@
 #include <sys/wait.h>
 
 #include "eventnames.h"
+#include "reader.h"
 #include "keystate.h"
 #include "executer.h"
 
 #ifndef NOTHREADS
 
 #include <pthread.h>
-#include <assert.h>
 
 // PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP looks like a GNU thing
 #ifndef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
@@ -110,6 +110,27 @@ void* reader_thread(void* ptr) {
 	devname = (char *) ptr;
 	read_events( devname );
 }
+
+void spawn_reader(char *dev, struct readerlist **list) {
+	// append struct to list
+	if (*list == NULL) {
+		*list = malloc(sizeof(**list));
+		(*list)->reader.devname = dev;
+		(*list)->next = NULL;
+		pthread_create( &((*list)->reader.thread), NULL, &reader_thread, (void *)dev );
+	} else {
+		spawn_reader( dev, &((*list)->next) );
+	}
+}
+
+void join_readers(struct readerlist **list) {
+	if (*list != NULL) {
+		pthread_join( (*list)->reader.thread, NULL );
+		join_readers( &( (*list)->next ) );
+		free(*list);
+	}
+}
+
 #endif
 
 int main(int argc, char *argv[]) {
@@ -143,17 +164,15 @@ int start_readers(int argc, char *argv[], int start) {
 		return 1;
 	} else {
 #ifndef NOTHREADS
+		struct readerlist *readers;
 		// create one thread for every device file supplied
-		pthread_t threads[ (argc-start)-1 ];
 		int i;
 		for (i=start; i<argc; i++) {
 			char *dev = argv[i];
-			int rc = pthread_create( &threads[i], NULL, &reader_thread, (void *)dev );
-			assert(rc==0);
+			spawn_reader( dev, &readers );
 		}
 		for (i=start; i<argc; i++) {
-			int rc = pthread_join(threads[i], NULL);
-			assert(rc==0);
+			join_readers( &readers );
 		}
 #else
 		// without threading, we only handle the first device file named
