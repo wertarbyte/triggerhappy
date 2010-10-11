@@ -41,6 +41,7 @@ pthread_cond_t reader_count_cv = PTHREAD_COND_INITIALIZER;
 /* list of all devices with their handling threads */
 static struct readerlist *readers = NULL;
 
+static char* command_pipe = NULL;
 #else
 
 #define LOCK(x) 
@@ -49,7 +50,6 @@ static struct readerlist *readers = NULL;
 #endif // NOTHREADS
 
 static char* script_basedir = NULL;
-static char* command_pipe = NULL;
 static int dump_events = 0;
 
 char* lookup_event_name(struct input_event ev) {
@@ -170,36 +170,6 @@ int count_readers(struct readerlist **list) {
 	}
 }
 
-#endif
-
-int main(int argc, char *argv[]) {
-	signal(SIGCHLD, SIG_IGN);
-	int c;
-	while ((c = getopt(argc, argv, "ds:c:")) != -1) {
-		switch (c) {
-			case 'd':
-				dump_events = 1;
-				break;
-			case 's':
-				script_basedir = optarg;
-				break;
-			case 'c':
-				command_pipe = optarg;
-				break;
-			case '?':
-				if (optopt == 's' || optopt == 'c') {
-					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-				} else if (isprint(optopt)) {
-					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-				} else {
-					fprintf(stderr, "Unknown option character\n");
-				}
-				return 1;
-		}
-	}
-	return start_readers(argc, argv, optind);
-}
-
 int read_commands(void) {
 	if (command_pipe == NULL) {
 		/* don't continue */
@@ -242,35 +212,70 @@ int read_commands(void) {
 	return 1;
 }
 
+#endif
+
+int main(int argc, char *argv[]) {
+	signal(SIGCHLD, SIG_IGN);
+	int c;
+	while ((c = getopt(argc, argv, "ds:c:")) != -1) {
+		switch (c) {
+			case 'd':
+				dump_events = 1;
+				break;
+			case 's':
+				script_basedir = optarg;
+				break;
+#ifndef NOTHREADS
+			case 'c':
+				command_pipe = optarg;
+				break;
+#endif
+			case '?':
+				if (optopt == 's' || optopt == 'c') {
+					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+				} else if (isprint(optopt)) {
+					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+				} else {
+					fprintf(stderr, "Unknown option character\n");
+				}
+				return 1;
+		}
+	}
+	return start_readers(argc, argv, optind);
+}
+
 int start_readers(int argc, char *argv[], int start) {
+#ifndef NOTHREADS
 	if (argc-start < 1 && command_pipe == NULL) {
 		fprintf(stderr, "No input device files or command pipe specified.\n");
 		return 1;
-	} else {
-#ifndef NOTHREADS
-		// create one thread for every device file supplied
-		int i;
-		for (i=start; i<argc; i++) {
-			char *dev = argv[i];
-			LOCK(reader_mutex);
-			add_device( dev, &readers );
-			UNLOCK(reader_mutex);
-		}
-
-		while (read_commands()) {}
-
-		// Now we have to wait until all threads terminate
+	}
+	// create one thread for every device file supplied
+	int i;
+	for (i=start; i<argc; i++) {
+		char *dev = argv[i];
 		LOCK(reader_mutex);
-		while(count_readers( &readers ) > 0) {
-			pthread_cond_wait(&reader_count_cv, &reader_mutex);
-		}
+		add_device( dev, &readers );
 		UNLOCK(reader_mutex);
-		fprintf(stderr, "Terminating...\n");
+	}
+
+	while (read_commands()) {}
+
+	// Now we have to wait until all threads terminate
+	LOCK(reader_mutex);
+	while(count_readers( &readers ) > 0) {
+		pthread_cond_wait(&reader_count_cv, &reader_mutex);
+	}
+	UNLOCK(reader_mutex);
+	fprintf(stderr, "Terminating...\n");
 
 #else
-		// without threading, we only handle the first device file named
-		read_events( argv[start] );
-#endif
+	if (argc-start < 1) {
+		fprintf(stderr, "No input device files specified.\n");
+		return 1;
 	}
+	// without threading, we only handle the first device file named
+	read_events( argv[start] );
+#endif
 	return 0;
 }
