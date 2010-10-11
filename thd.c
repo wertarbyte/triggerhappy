@@ -49,6 +49,7 @@ static struct readerlist *readers = NULL;
 #endif // NOTHREADS
 
 static char* script_basedir = NULL;
+static char* command_pipe = NULL;
 static int dump_events = 0;
 
 char* lookup_event_name(struct input_event ev) {
@@ -127,6 +128,8 @@ void* reader_thread(void* ptr) {
 }
 
 void add_device(char *dev, struct readerlist **list) {
+	// make sure any previous instances are removed
+	remove_device( dev, list );
 	// append struct to list
 	if (*list == NULL) {
 		*list = malloc(sizeof(**list));
@@ -172,7 +175,7 @@ int count_readers(struct readerlist **list) {
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
 	int c;
-	while ((c = getopt(argc, argv, "ds:")) != -1) {
+	while ((c = getopt(argc, argv, "ds:c:")) != -1) {
 		switch (c) {
 			case 'd':
 				dump_events = 1;
@@ -180,8 +183,11 @@ int main(int argc, char *argv[]) {
 			case 's':
 				script_basedir = optarg;
 				break;
+			case 'c':
+				command_pipe = optarg;
+				break;
 			case '?':
-				if (optopt == 's') {
+				if (optopt == 's' || optopt == 'c') {
 					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
 				} else if (isprint(optopt)) {
 					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
@@ -194,9 +200,51 @@ int main(int argc, char *argv[]) {
 	return start_readers(argc, argv, optind);
 }
 
+int read_commands(void) {
+	if (command_pipe == NULL) {
+		/* don't continue */
+		return 0;
+	}
+	FILE *pipe;
+	int len = 0;
+	char *line = NULL;
+	ssize_t read;
+	pipe = fopen(command_pipe, "r");
+	if (pipe == NULL) {
+		return 0;
+	}
+	while ((read = getline(&line, &len, pipe)) != -1) {
+		/* remove newline character */
+		char *nl = NULL;
+		if ( (nl = strstr(line, "\n")) != NULL ) {
+			*nl = '\0';
+		}
+
+		if (read < 1)
+			continue;
+
+		/* copy argument */
+		int l = (read)*sizeof(char);
+		char *dev = malloc(l);
+		strncpy( dev, &line[1], l);
+
+		LOCK(reader_mutex);
+		if (line[0] == '+') {
+			fprintf(stderr, "Adding device '%s'\n", dev);
+			add_device( dev, &readers );
+		} else if (line[0] == '-') {
+			fprintf(stderr, "Removing device '%s'\n", dev);
+			remove_device( dev, &readers );
+		}
+		UNLOCK(reader_mutex);
+	}
+	free(line);
+	return 1;
+}
+
 int start_readers(int argc, char *argv[], int start) {
-	if (argc-start < 1) {
-		fprintf(stderr, "No input device file specified.\n");
+	if (argc-start < 1 && command_pipe == NULL) {
+		fprintf(stderr, "No input device files or command pipe specified.\n");
 		return 1;
 	} else {
 #ifndef NOTHREADS
@@ -208,6 +256,8 @@ int start_readers(int argc, char *argv[], int start) {
 			add_device( dev, &readers );
 			UNLOCK(reader_mutex);
 		}
+
+		while (read_commands()) {}
 
 		// Now we have to wait until all threads terminate
 		LOCK(reader_mutex);
