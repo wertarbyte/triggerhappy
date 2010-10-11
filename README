@@ -6,8 +6,8 @@ http://github.com/wertarbyte/triggerhappy/
 
 Triggerhappy is a hotkey daemon developed with small and embedded systems in
 mind, e.g. linux based routers. It attaches to the input device files and
-interprets the event data received and executes scripts placed in its
-configuration directory.
+interprets the event data received and executes scripts configured in its
+configuration.
 
 Examples:
 
