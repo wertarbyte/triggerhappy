@@ -67,13 +67,13 @@ char* lookup_event_name(struct input_event ev) {
 /*
  * Look up event and key names and print them to STDOUT
  */
-void print_event(struct input_event ev) {
+void print_event(char* dev, struct input_event ev) {
 	char *typename = EV_NAME[ ev.type ];
 	char *evname = lookup_event_name( ev );
 	if ( evname != NULL ) {
-		printf( "%s\t%s\t%d\n", typename, evname, ev.value );
+		printf( "%s\t%s\t%d\t%s\n", typename, evname, ev.value, dev );
 	} else {
-		fprintf( stderr, "Unknown %s event id: %d (value %d)\n", typename, ev.code, ev.value );
+		fprintf( stderr, "Unknown %s event id on %s : %d (value %d)\n", typename, dev, ev.code, ev.value );
 	}
 	fflush(stdout);
 }
@@ -100,7 +100,7 @@ int read_events(char *devname) {
 				LOCK(keystate_mutex);
 				change_keystate( ev );
 				if (dump_events) {
-					print_event( ev );
+					print_event( devname, ev );
 					print_keystate();
 				}
 				if (script_basedir != NULL)
