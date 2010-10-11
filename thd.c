@@ -19,6 +19,7 @@
 #include "readerlist.h"
 #include "keystate.h"
 #include "executer.h"
+#include "conf.h"
 
 #ifndef NOTHREADS
 
@@ -49,6 +50,7 @@ static char* command_pipe = NULL;
 
 #endif // NOTHREADS
 
+static eventhandler *handlers = NULL;
 static char* script_basedir = NULL;
 static int dump_events = 0;
 
@@ -103,6 +105,7 @@ int read_events(char *devname) {
 				}
 				if (script_basedir != NULL)
 					launch_script( script_basedir, ev );
+				run_handlers( ev.type, ev.code, ev.value, handlers);
 				UNLOCK(keystate_mutex);
 			}
 		}
@@ -214,13 +217,16 @@ int read_commands(void) {
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
 	int c;
-	while ((c = getopt(argc, argv, "ds:c:")) != -1) {
+	while ((c = getopt(argc, argv, "ds:c:e:")) != -1) {
 		switch (c) {
 			case 'd':
 				dump_events = 1;
 				break;
 			case 's':
 				script_basedir = optarg;
+				break;
+			case 'e':
+				read_eventhandlers(optarg, &handlers);
 				break;
 #ifndef NOTHREADS
 			case 'c':

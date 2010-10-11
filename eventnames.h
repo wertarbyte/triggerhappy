@@ -483,4 +483,44 @@ static char *SW_NAME[SW_MAX] = {
 
 char* lookup_event_name( struct input_event );
 
+static int lookup_event_code( char* eventname ) {
+	int i = 0;
+	while (i < KEY_MAX) {
+		if (KEY_NAME[i] != NULL &&
+		    strcmp(eventname, KEY_NAME[i]) == 0) {
+			return i;
+		}
+		i++;
+	}
+	i = 0;
+	while (i<SW_MAX) {
+		if (SW_NAME[i] != NULL &&
+		    strcmp(eventname, SW_NAME[i]) == 0) {
+			return i;
+		}
+		i++;
+	}
+	return -1;
+}
+
+static int lookup_event_type( char* eventname ) {
+	int i = 0;
+	while (i<KEY_MAX) {
+		if (KEY_NAME[i] != NULL &&
+		    strcmp(eventname, KEY_NAME[i]) == 0) {
+			return EV_KEY;
+		}
+		i++;
+	}
+	i = 0;
+	while (i<SW_MAX) {
+		if (SW_NAME[i] != NULL &&
+		    strcmp(eventname, SW_NAME[i]) == 0) {
+			return EV_SW;
+		}
+		i++;
+	}
+	return -1;
+}
+
 #endif
