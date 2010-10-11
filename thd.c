@@ -16,7 +16,7 @@
 #include <sys/wait.h>
 
 #include "eventnames.h"
-#include "reader.h"
+#include "readerlist.h"
 #include "keystate.h"
 #include "executer.h"
 
@@ -31,9 +31,15 @@
 #endif
 
 pthread_mutex_t keystate_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+pthread_mutex_t reader_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+/* keeps track of the number of reader threads */
+pthread_cond_t reader_count_cv = PTHREAD_COND_INITIALIZER;
 
 #define LOCK(mutex) pthread_mutex_lock(&mutex)
 #define UNLOCK(mutex) pthread_mutex_unlock(&mutex)
+
+/* list of all devices with their handling threads */
+static struct readerlist *readers = NULL;
 
 #else
 
@@ -106,12 +112,21 @@ int read_events(char *devname) {
 
 #ifndef NOTHREADS
 void* reader_thread(void* ptr) {
+	// detach myself
+	pthread_detach(pthread_self());
 	char *devname;
 	devname = (char *) ptr;
 	read_events( devname );
+	// thread has done its work, remove device from list
+	LOCK(reader_mutex);
+	remove_device( devname, &readers );
+	UNLOCK(reader_mutex);
+	// luckily, we don't pthread_cancel ourselves
+	fprintf(stderr, "Device %s removed\n", devname);
+	pthread_cond_signal(&reader_count_cv);
 }
 
-void spawn_reader(char *dev, struct readerlist **list) {
+void add_device(char *dev, struct readerlist **list) {
 	// append struct to list
 	if (*list == NULL) {
 		*list = malloc(sizeof(**list));
@@ -119,15 +134,36 @@ void spawn_reader(char *dev, struct readerlist **list) {
 		(*list)->next = NULL;
 		pthread_create( &((*list)->reader.thread), NULL, &reader_thread, (void *)dev );
 	} else {
-		spawn_reader( dev, &((*list)->next) );
+		add_device( dev, &((*list)->next) );
 	}
 }
 
-void join_readers(struct readerlist **list) {
+int remove_device(char *dev, struct readerlist **list) {
 	if (*list != NULL) {
-		pthread_join( (*list)->reader.thread, NULL );
-		join_readers( &( (*list)->next ) );
-		free(*list);
+		struct inputreader *r = &( (*list)->reader );
+		if ( strcmp( r->devname, dev ) == 0 ) {
+			struct readerlist *copy = *list;
+			/* we don't cancel ourselves */
+			if (pthread_equal(r->thread, pthread_self()) == 0) {
+				pthread_cancel( r->thread );
+			}
+			*list = (*list)->next;
+			free(copy);
+			return 1;
+		} else {
+			return remove_device( dev, &( (*list)->next) );
+		}
+	} else {
+		/* reached the end */
+		return 0;
+	}
+}
+
+int count_readers(struct readerlist **list) {
+	if (*list == NULL) {
+		return 0;
+	} else {
+		return 1 + count_readers( &( (*list)->next ) );
 	}
 }
 
@@ -164,16 +200,23 @@ int start_readers(int argc, char *argv[], int start) {
 		return 1;
 	} else {
 #ifndef NOTHREADS
-		struct readerlist *readers;
 		// create one thread for every device file supplied
 		int i;
 		for (i=start; i<argc; i++) {
 			char *dev = argv[i];
-			spawn_reader( dev, &readers );
+			LOCK(reader_mutex);
+			add_device( dev, &readers );
+			UNLOCK(reader_mutex);
 		}
-		for (i=start; i<argc; i++) {
-			join_readers( &readers );
+
+		// Now we have to wait until all threads terminate
+		LOCK(reader_mutex);
+		while(count_readers( &readers ) > 0) {
+			pthread_cond_wait(&reader_count_cv, &reader_mutex);
 		}
+		UNLOCK(reader_mutex);
+		fprintf(stderr, "Terminating...\n");
+
 #else
 		// without threading, we only handle the first device file named
 		read_events( argv[start] );
