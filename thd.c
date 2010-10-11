@@ -116,7 +116,7 @@ void* reader_thread(void* ptr) {
 	// detach myself
 	pthread_detach(pthread_self());
 	char *devname;
-	devname = (char *) ptr;
+	devname = strdup((char *) ptr);
 	read_events( devname );
 	// thread has done its work, remove device from list
 	LOCK(reader_mutex);
@@ -124,18 +124,17 @@ void* reader_thread(void* ptr) {
 	UNLOCK(reader_mutex);
 	// luckily, we don't pthread_cancel ourselves
 	fprintf(stderr, "Device %s removed\n", devname);
+	free(devname);
 	pthread_cond_signal(&reader_count_cv);
 }
 
 void add_device(char *dev, struct readerlist **list) {
-	// make sure any previous instances are removed
-	remove_device( dev, list );
 	// append struct to list
 	if (*list == NULL) {
 		*list = malloc(sizeof(**list));
-		(*list)->reader.devname = dev;
+		(*list)->reader.devname = strdup(dev);
 		(*list)->next = NULL;
-		pthread_create( &((*list)->reader.thread), NULL, &reader_thread, (void *)dev );
+		pthread_create( &((*list)->reader.thread), NULL, &reader_thread, (void *)(*list)->reader.devname );
 	} else {
 		add_device( dev, &((*list)->next) );
 	}
@@ -151,6 +150,7 @@ int remove_device(char *dev, struct readerlist **list) {
 				pthread_cancel( r->thread );
 			}
 			*list = (*list)->next;
+			free(copy->reader.devname);
 			free(copy);
 			return 1;
 		} else {
@@ -184,25 +184,22 @@ int read_commands(void) {
 		return 0;
 	}
 	while ((read = getline(&line, &len, pipe)) != -1) {
-		/* remove newline character */
-		char *nl = NULL;
-		if ( (nl = strstr(line, "\n")) != NULL ) {
-			*nl = '\0';
-		}
-
 		if (read < 1)
 			continue;
 
-		/* copy argument */
-		int l = (read)*sizeof(char);
-		char *dev = malloc(l);
-		strncpy( dev, &line[1], l);
+		const char delimiters[] = " \t\n";
+		char *sptr;
+		char *op, *dev;
+		op = strtok_r( line, delimiters, &sptr );
+		dev = strtok_r( NULL, delimiters, &sptr );
 
 		LOCK(reader_mutex);
-		if (line[0] == '+') {
+		if (strcmp("ADD", op) == 0 && dev != NULL) {
 			fprintf(stderr, "Adding device '%s'\n", dev);
+			/* make sure we remove double devices */
+			remove_device( dev, &readers );
 			add_device( dev, &readers );
-		} else if (line[0] == '-') {
+		} else if (strcmp("REMOVE", op) == 0 && dev != NULL) {
 			fprintf(stderr, "Removing device '%s'\n", dev);
 			remove_device( dev, &readers );
 		}
