@@ -4,6 +4,23 @@
 #include <stdlib.h>
 #include "eventnames.h"
 
+static int strint(const char *str) {
+	if (str == NULL) {
+		return -1;
+	} else {
+		return atoi(str);
+	}
+}
+
+/* copy token */
+static char* ct(char *token) {
+	if (token == NULL) {
+		return NULL;
+	} else {
+		return strdup(token);
+	}
+}
+
 eventhandler* parse_eventhandler(char* line) {
 	char *token = NULL;
 	char *sptr = NULL;
@@ -17,12 +34,13 @@ eventhandler* parse_eventhandler(char* line) {
 
 	char *delim = " \t\n";
 
-	char *evname = strtok_r(cp, delim, &sptr);
-	int value = atoi( strtok_r(NULL, delim, &sptr) );
-	char *cmd = strtok_r(NULL, "\n", &sptr);
+	char *evname = ct( strtok_r(cp, delim, &sptr) );
+	int value = strint( strtok_r(NULL, delim, &sptr) );
+	char *cmd = ct( strtok_r(NULL, "\n", &sptr) );
+	free(cp);
 
 	/* all fields filled? */
-	if (evname && cmd) {
+	if (evname && cmd && (value >= 0)) {
 		eventhandler *eh = malloc( sizeof(eventhandler) );
 		eh->type = lookup_event_type( evname );
 		eh->code = lookup_event_code( evname );
@@ -30,9 +48,11 @@ eventhandler* parse_eventhandler(char* line) {
 		eh->cmdline = cmd;
 		eh->next = NULL;
 		return eh;
+	} else {
+		free(evname);
+		free(cmd);
+		return NULL;
 	}
-
-	return NULL;
 }
 
 void append_handler(eventhandler *handler, eventhandler **list) {
@@ -54,7 +74,11 @@ int read_eventhandlers(const char *filename, eventhandler **list) {
         }
         while ((read = getline(&line, &len, conf)) != -1) {
 		eventhandler *h = parse_eventhandler( line );
-		append_handler( h, list );
+		if (h) {
+			append_handler( h, list );
+		} else {
+			fprintf(stderr, "Unable to parse config line: %s\n", line);
+		}
 	}
 	fclose(conf);
 	free(line);
