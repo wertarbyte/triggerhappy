@@ -9,6 +9,12 @@ eventhandler* parse_eventhandler(char* line) {
 	char *sptr = NULL;
 	char *cp = strdup(line);
 
+	/* ignore everything behind # */
+	char *comment = strchr(line, '#');
+	if ( comment != NULL ) {
+		*comment = '\0';
+	}
+
 	char *delim = " \t\n";
 
 	char *evname = strtok_r(cp, delim, &sptr);
