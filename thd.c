@@ -40,7 +40,7 @@ pthread_cond_t reader_count_cv = PTHREAD_COND_INITIALIZER;
 #define UNLOCK(mutex) pthread_mutex_unlock(&mutex)
 
 /* list of all devices with their handling threads */
-static struct readerlist *readers = NULL;
+static readerlist *readers = NULL;
 
 static char* command_pipe = NULL;
 #else
@@ -131,7 +131,7 @@ void* reader_thread(void* ptr) {
 	pthread_cond_signal(&reader_count_cv);
 }
 
-void add_device(char *dev, struct readerlist **list) {
+void add_device(char *dev, readerlist **list) {
 	// append struct to list
 	if (*list == NULL) {
 		*list = malloc(sizeof(**list));
@@ -143,11 +143,11 @@ void add_device(char *dev, struct readerlist **list) {
 	}
 }
 
-int remove_device(char *dev, struct readerlist **list) {
+int remove_device(char *dev, readerlist **list) {
 	if (*list != NULL) {
-		struct inputreader *r = &( (*list)->reader );
+		inputreader *r = &( (*list)->reader );
 		if ( strcmp( r->devname, dev ) == 0 ) {
-			struct readerlist *copy = *list;
+			readerlist *copy = *list;
 			/* we don't cancel ourselves */
 			if (pthread_equal(r->thread, pthread_self()) == 0) {
 				pthread_cancel( r->thread );
@@ -165,7 +165,7 @@ int remove_device(char *dev, struct readerlist **list) {
 	}
 }
 
-int count_readers(struct readerlist **list) {
+int count_readers(readerlist **list) {
 	if (*list == NULL) {
 		return 0;
 	} else {
