@@ -54,6 +54,8 @@ static eventhandler *handlers = NULL;
 static char* script_basedir = NULL;
 static int dump_events = 0;
 
+static keystate_holder *keystate = NULL;
+
 char* lookup_event_name(struct input_event ev) {
 	if (ev.type == EV_KEY) {
 		return (KEY_MAX >= ev.code ? KEY_NAME[ ev.code ] : NULL);
@@ -98,10 +100,10 @@ int read_events(char *devname) {
 			/* ignore all events except KEY and SW */
 			if (ev.type == EV_KEY || ev.type == EV_SW) {
 				LOCK(keystate_mutex);
-				change_keystate( ev );
+				change_keystate( *keystate, ev );
 				if (dump_events) {
 					print_event( devname, ev );
-					print_keystate();
+					print_keystate( *keystate );
 				}
 				if (script_basedir != NULL)
 					launch_script( script_basedir, ev );
@@ -244,6 +246,9 @@ int main(int argc, char *argv[]) {
 				return 1;
 		}
 	}
+	/* init keystate holder */
+	init_keystate_holder(&keystate);
+	printf("Initialized keystate_holder\n");
 	return start_readers(argc, argv, optind);
 }
 
