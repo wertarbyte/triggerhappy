@@ -10,5 +10,4 @@ struct readerlist {
 
 void add_device(char*, struct readerlist**);
 int remove_device(char*, struct readerlist**);
-void join_readers(struct readerlist**);
 int count_readers(struct readerlist**);
