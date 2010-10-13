@@ -31,10 +31,11 @@
 { { 0, 0, 0, PTHREAD_MUTEX_RECURSIVE_NP, 0, { 0 } } }
 #endif
 
-pthread_mutex_t keystate_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-pthread_mutex_t reader_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+/* locked while processing an event */
+pthread_mutex_t processing_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
+pthread_mutex_t readerlist_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
 /* keeps track of the number of reader threads */
-pthread_cond_t reader_count_cv = PTHREAD_COND_INITIALIZER;
+pthread_cond_t readerlist_count_cv = PTHREAD_COND_INITIALIZER;
 
 #define LOCK(mutex) pthread_mutex_lock(&mutex)
 #define UNLOCK(mutex) pthread_mutex_unlock(&mutex)
@@ -99,7 +100,7 @@ int read_events(char *devname) {
 			}
 			/* ignore all events except KEY and SW */
 			if (ev.type == EV_KEY || ev.type == EV_SW) {
-				LOCK(keystate_mutex);
+				LOCK(processing_mutex);
 				change_keystate( *keystate, ev );
 				if (dump_events) {
 					print_event( devname, ev );
@@ -108,7 +109,7 @@ int read_events(char *devname) {
 				if (script_basedir != NULL)
 					launch_script( script_basedir, ev );
 				run_handlers( ev.type, ev.code, ev.value, handlers);
-				UNLOCK(keystate_mutex);
+				UNLOCK(processing_mutex);
 			}
 		}
 		close(dev);
@@ -124,13 +125,13 @@ void* reader_thread(void* ptr) {
 	devname = strdup((char *) ptr);
 	read_events( devname );
 	// thread has done its work, remove device from list
-	LOCK(reader_mutex);
+	LOCK(readerlist_mutex);
 	remove_device( devname, &readers );
-	UNLOCK(reader_mutex);
+	UNLOCK(readerlist_mutex);
 	// luckily, we don't pthread_cancel ourselves
 	fprintf(stderr, "Device %s removed\n", devname);
 	free(devname);
-	pthread_cond_signal(&reader_count_cv);
+	pthread_cond_signal(&readerlist_count_cv);
 }
 
 void add_device(char *dev, readerlist **list) {
@@ -198,7 +199,7 @@ int read_commands(void) {
 		op = strtok_r( line, delimiters, &sptr );
 		dev = strtok_r( NULL, delimiters, &sptr );
 
-		LOCK(reader_mutex);
+		LOCK(readerlist_mutex);
 		if (strcmp("ADD", op) == 0 && dev != NULL) {
 			fprintf(stderr, "Adding device '%s'\n", dev);
 			/* make sure we remove double devices */
@@ -208,7 +209,7 @@ int read_commands(void) {
 			fprintf(stderr, "Removing device '%s'\n", dev);
 			remove_device( dev, &readers );
 		}
-		UNLOCK(reader_mutex);
+		UNLOCK(readerlist_mutex);
 	}
 	free(line);
 	return 1;
@@ -262,19 +263,19 @@ int start_readers(int argc, char *argv[], int start) {
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
-		LOCK(reader_mutex);
+		LOCK(readerlist_mutex);
 		add_device( dev, &readers );
-		UNLOCK(reader_mutex);
+		UNLOCK(readerlist_mutex);
 	}
 
 	while (read_commands()) {}
 
 	// Now we have to wait until all threads terminate
-	LOCK(reader_mutex);
+	LOCK(readerlist_mutex);
 	while(count_readers( &readers ) > 0) {
-		pthread_cond_wait(&reader_count_cv, &reader_mutex);
+		pthread_cond_wait(&readerlist_count_cv, &readerlist_mutex);
 	}
-	UNLOCK(reader_mutex);
+	UNLOCK(readerlist_mutex);
 	fprintf(stderr, "Terminating...\n");
 
 #else
