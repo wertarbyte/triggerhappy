@@ -8,7 +8,7 @@
 #include "executer.h"
 
 void launch_script( const char* basedir, struct input_event ev ) {
-	// we only handle key nd switch events
+	// we only handle key and switch events
 	if (! (ev.type == EV_KEY || ev.type == EV_SW))
 		return;
 	// we only launch script on pressing keys
