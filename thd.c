@@ -57,21 +57,11 @@ static int dump_events = 0;
 
 static keystate_holder *keystate = NULL;
 
-char* lookup_event_name(struct input_event ev) {
-	if (ev.type == EV_KEY) {
-		return (KEY_MAX >= ev.code ? KEY_NAME[ ev.code ] : NULL);
-	}
-	if (ev.type == EV_SW) {
-		return (SW_MAX >= ev.code ? SW_NAME[ ev.code ] : NULL);
-	}
-	return NULL;
-}
-
 /*
  * Look up event and key names and print them to STDOUT
  */
 void print_event(char* dev, struct input_event ev) {
-	char *typename = EV_NAME[ ev.type ];
+	char *typename = lookup_type_name( ev );
 	char *evname = lookup_event_name( ev );
 	if ( evname != NULL ) {
 		printf( "%s\t%s\t%d\t%s\n", typename, evname, ev.value, dev );

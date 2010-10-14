@@ -48,7 +48,7 @@ void print_keystate(keystate_holder ksh) {
 	printf("STATE\t");
 	for (i=0; i<=KEY_MAX; i++) {
 		if (ksh[i] > 0) {
-			printf("%s%s", (n>0?"+":""), KEY_NAME[i]);
+			printf("%s%s", (n>0?"+":""), lookup_event_name_i(EV_KEY, i));
 			n++;
 		}
 	}
