@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include "eventnames.h"
-#include "executer.h"
+#include "triggerdir.h"
 
-void launch_script( const char* basedir, struct input_event ev ) {
+void run_triggerdir( const char* basedir, struct input_event ev ) {
 	// we only handle key and switch events
 	if (! (ev.type == EV_KEY || ev.type == EV_SW))
 		return;

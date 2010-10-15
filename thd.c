@@ -16,10 +16,10 @@
 #include <sys/wait.h>
 
 #include "eventnames.h"
-#include "readerlist.h"
+#include "devreader.h"
 #include "keystate.h"
-#include "executer.h"
-#include "conf.h"
+#include "triggerdir.h"
+#include "trigger.h"
 
 #ifndef NOTHREADS
 
@@ -41,7 +41,7 @@ pthread_cond_t readerlist_count_cv = PTHREAD_COND_INITIALIZER;
 #define UNLOCK(mutex) pthread_mutex_unlock(&mutex)
 
 /* list of all devices with their handling threads */
-static readerlist *readers = NULL;
+static devreader *readers = NULL;
 
 static char* command_pipe = NULL;
 #else
@@ -51,7 +51,7 @@ static char* command_pipe = NULL;
 
 #endif // NOTHREADS
 
-static eventhandler *handlers = NULL;
+static trigger *triggers = NULL;
 static char* script_basedir = NULL;
 static int dump_events = 0;
 
@@ -97,8 +97,8 @@ int read_events(char *devname) {
 					print_keystate( *keystate );
 				}
 				if (script_basedir != NULL)
-					launch_script( script_basedir, ev );
-				run_handlers( ev.type, ev.code, ev.value, handlers);
+					run_triggerdir( script_basedir, ev );
+				run_triggers( ev.type, ev.code, ev.value, triggers );
 				UNLOCK(processing_mutex);
 			}
 		}
@@ -124,31 +124,30 @@ void* reader_thread(void* ptr) {
 	pthread_cond_signal(&readerlist_count_cv);
 }
 
-void add_device(char *dev, readerlist **list) {
-	readerlist **p = list;
+void add_device(char *dev, devreader **list) {
+	devreader **p = list;
 	// find end of list
 	while (*p != NULL) {
-		p = &( (*list)->next );
+		p = &( (*p)->next );
 	}
 	*p = malloc(sizeof(**list));
-	(*p)->reader.devname = strdup(dev);
+	(*p)->devname = strdup(dev);
 	(*p)->next = NULL;
-	pthread_create( &((*p)->reader.thread), NULL, &reader_thread, (void *)(*list)->reader.devname );
+	pthread_create( &((*p)->thread), NULL, &reader_thread, (void *)(*p)->devname );
 }
 
-int remove_device(char *dev, readerlist **list) {
-	readerlist **p = list;
+int remove_device(char *dev, devreader **list) {
+	devreader **p = list;
 	while (*p != NULL) {
-		inputreader *r = &( (*p)->reader );
-		if ( strcmp( r->devname, dev ) == 0 ) {
-			readerlist *copy = *p;
+		if ( strcmp( (*p)->devname, dev ) == 0 ) {
+			devreader *copy = *p;
 			/* we don't cancel ourselves */
-			if (pthread_equal(r->thread, pthread_self()) == 0) {
-				pthread_cancel( r->thread );
+			if (pthread_equal((*p)->thread, pthread_self()) == 0) {
+				pthread_cancel( (*p)->thread );
 			}
 			/* bypass the list item */
 			*p = copy->next;
-			free(copy->reader.devname);
+			free(copy->devname);
 			free(copy);
 			return 1;
 		}
@@ -159,9 +158,9 @@ int remove_device(char *dev, readerlist **list) {
 	return 0;
 }
 
-int count_readers(readerlist **list) {
+int count_readers(devreader **list) {
 	int n = 0;
-	readerlist **p = list;
+	devreader **p = list;
 	while (*p != NULL) {
 		n++;
 		p = &( (*p)->next );
@@ -222,7 +221,7 @@ int main(int argc, char *argv[]) {
 				script_basedir = optarg;
 				break;
 			case 'e':
-				read_eventhandlers(optarg, &handlers);
+				read_triggerfile(optarg, &triggers);
 				break;
 #ifndef NOTHREADS
 			case 'c':

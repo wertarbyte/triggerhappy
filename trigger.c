@@ -1,4 +1,4 @@
-#include "conf.h"
+#include "trigger.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +21,7 @@ static char* ct(char *token) {
 	}
 }
 
-eventhandler* parse_eventhandler(char* line) {
+trigger* parse_trigger(char* line) {
 	char *token = NULL;
 	char *sptr = NULL;
 	char *cp = strdup(line);
@@ -41,13 +41,13 @@ eventhandler* parse_eventhandler(char* line) {
 
 	/* all fields filled? */
 	if (evname && cmd && (value >= 0)) {
-		eventhandler *eh = malloc( sizeof(eventhandler) );
-		eh->type = lookup_event_type( evname );
-		eh->code = lookup_event_code( evname );
-		eh->value = value;
-		eh->cmdline = cmd;
-		eh->next = NULL;
-		return eh;
+		trigger *et = malloc( sizeof(trigger) );
+		et->type = lookup_event_type( evname );
+		et->code = lookup_event_code( evname );
+		et->value = value;
+		et->cmdline = cmd;
+		et->next = NULL;
+		return et;
 	} else {
 		free(evname);
 		free(cmd);
@@ -55,15 +55,15 @@ eventhandler* parse_eventhandler(char* line) {
 	}
 }
 
-void append_handler(eventhandler *handler, eventhandler **list) {
-	eventhandler **p = list;
+void append_trigger(trigger *t, trigger **list) {
+	trigger **p = list;
 	while (*p != NULL) {
 		p = &( (*p)->next );
 	}
-	*p = handler;
+	*p = t;
 }
 
-int read_eventhandlers(const char *filename, eventhandler **list) {
+int read_triggerfile(const char *filename, trigger **list) {
         FILE *conf;
         int len = 0;
         char *line = NULL;
@@ -73,11 +73,11 @@ int read_eventhandlers(const char *filename, eventhandler **list) {
 		return 1;
         }
         while ((read = getline(&line, &len, conf)) != -1) {
-		eventhandler *h = parse_eventhandler( line );
-		if (h) {
-			append_handler( h, list );
+		trigger *t = parse_trigger( line );
+		if (t) {
+			append_trigger( t, list );
 		} else {
-			fprintf(stderr, "Unable to parse config line: %s\n", line);
+			fprintf(stderr, "Unable to parse trigger line: %s\n", line);
 		}
 	}
 	fclose(conf);
@@ -85,26 +85,26 @@ int read_eventhandlers(const char *filename, eventhandler **list) {
 	return 0;
 }
 
-void run_handlers(int type, int code, int value, eventhandler *list) {
-	eventhandler *eh = list;
-	while (eh != NULL) {
-		if ( type  == eh->type &&
-		     code  == eh->code &&
-		     value == eh->value ) {
-			fprintf(stderr, "Executing handler: %s\n", eh->cmdline);
+void run_triggers(int type, int code, int value, trigger *list) {
+	trigger *et = list;
+	while (et != NULL) {
+		if ( type  == et->type &&
+		     code  == et->code &&
+		     value == et->value ) {
+			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
 			int pid = fork();
 			if (pid == 0 ) {
-				system(	eh->cmdline );
+				system(	et->cmdline );
 				exit(0);
 			}
 		}
-		eh = eh->next;
+		et = et->next;
 	}
 }
 
-int count_handlers( eventhandler **list ) {
+int count_handlers( trigger **list ) {
 	int n = 0;
-	eventhandler *p = *list;
+	trigger *p = *list;
 	while ( p != NULL ) {
 		n++;
 		p = p->next;
