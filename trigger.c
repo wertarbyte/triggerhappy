@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include "eventnames.h"
 
+trigger *TRIGGER_LIST = NULL;
+
 static int strint(const char *str) {
 	if (str == NULL) {
 		return -1;
@@ -55,15 +57,16 @@ trigger* parse_trigger(char* line) {
 	}
 }
 
-void append_trigger(trigger *t, trigger **list) {
-	trigger **p = list;
+void append_trigger(trigger *t) {
+	trigger **p = &TRIGGER_LIST;
 	while (*p != NULL) {
 		p = &( (*p)->next );
 	}
 	*p = t;
 }
 
-int read_triggerfile(const char *filename, trigger **list) {
+int read_triggerfile(const char *filename) {
+	trigger **p = &TRIGGER_LIST;
         FILE *conf;
         int len = 0;
         char *line = NULL;
@@ -75,7 +78,7 @@ int read_triggerfile(const char *filename, trigger **list) {
         while ((read = getline(&line, &len, conf)) != -1) {
 		trigger *t = parse_trigger( line );
 		if (t) {
-			append_trigger( t, list );
+			append_trigger( t );
 		} else {
 			fprintf(stderr, "Unable to parse trigger line: %s\n", line);
 		}
@@ -85,8 +88,8 @@ int read_triggerfile(const char *filename, trigger **list) {
 	return 0;
 }
 
-void run_triggers(int type, int code, int value, trigger *list) {
-	trigger *et = list;
+void run_triggers(int type, int code, int value) {
+	trigger *et = TRIGGER_LIST;
 	while (et != NULL) {
 		if ( type  == et->type &&
 		     code  == et->code &&

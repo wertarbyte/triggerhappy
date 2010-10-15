@@ -7,6 +7,8 @@ typedef struct trigger {
 } trigger;
 
 trigger* parse_trigger(char* line);
-void append_trigger(trigger *t, trigger **list);
-int read_triggerfile(const char* filename, trigger **list);
-void run_triggers(int type, int code, int value, trigger *list);
+void append_trigger(trigger *t);
+int read_triggerfile(const char* filename);
+void run_triggers(int type, int code, int value);
+
+extern trigger *TRIGGER_LIST;

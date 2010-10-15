@@ -51,7 +51,6 @@ static char* command_pipe = NULL;
 
 #endif // NOTHREADS
 
-static trigger *triggers = NULL;
 static char* script_basedir = NULL;
 static int dump_events = 0;
 
@@ -98,7 +97,7 @@ int read_events(char *devname) {
 				}
 				if (script_basedir != NULL)
 					run_triggerdir( script_basedir, ev );
-				run_triggers( ev.type, ev.code, ev.value, triggers );
+				run_triggers( ev.type, ev.code, ev.value );
 				UNLOCK(processing_mutex);
 			}
 		}
@@ -221,7 +220,7 @@ int main(int argc, char *argv[]) {
 				script_basedir = optarg;
 				break;
 			case 'e':
-				read_triggerfile(optarg, &triggers);
+				read_triggerfile(optarg);
 				break;
 #ifndef NOTHREADS
 			case 'c':
