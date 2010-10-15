@@ -125,45 +125,48 @@ void* reader_thread(void* ptr) {
 }
 
 void add_device(char *dev, readerlist **list) {
-	// append struct to list
-	if (*list == NULL) {
-		*list = malloc(sizeof(**list));
-		(*list)->reader.devname = strdup(dev);
-		(*list)->next = NULL;
-		pthread_create( &((*list)->reader.thread), NULL, &reader_thread, (void *)(*list)->reader.devname );
-	} else {
-		add_device( dev, &((*list)->next) );
+	readerlist **p = list;
+	// find end of list
+	while (*p != NULL) {
+		p = &( (*list)->next );
 	}
+	*p = malloc(sizeof(**list));
+	(*p)->reader.devname = strdup(dev);
+	(*p)->next = NULL;
+	pthread_create( &((*p)->reader.thread), NULL, &reader_thread, (void *)(*list)->reader.devname );
 }
 
 int remove_device(char *dev, readerlist **list) {
-	if (*list != NULL) {
-		inputreader *r = &( (*list)->reader );
+	readerlist **p = list;
+	while (*p != NULL) {
+		inputreader *r = &( (*p)->reader );
 		if ( strcmp( r->devname, dev ) == 0 ) {
-			readerlist *copy = *list;
+			readerlist *copy = *p;
 			/* we don't cancel ourselves */
 			if (pthread_equal(r->thread, pthread_self()) == 0) {
 				pthread_cancel( r->thread );
 			}
-			*list = (*list)->next;
+			/* bypass the list item */
+			*p = copy->next;
 			free(copy->reader.devname);
 			free(copy);
 			return 1;
-		} else {
-			return remove_device( dev, &( (*list)->next) );
 		}
-	} else {
-		/* reached the end */
-		return 0;
+		/* advance to the next node */
+		p = &( (*p)->next );
 	}
+	/* reached the end of the list */
+	return 0;
 }
 
 int count_readers(readerlist **list) {
-	if (*list == NULL) {
-		return 0;
-	} else {
-		return 1 + count_readers( &( (*list)->next ) );
+	int n = 0;
+	readerlist **p = list;
+	while (*p != NULL) {
+		n++;
+		p = &( (*p)->next );
 	}
+	return n;
 }
 
 int read_commands(void) {

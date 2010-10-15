@@ -56,11 +56,11 @@ eventhandler* parse_eventhandler(char* line) {
 }
 
 void append_handler(eventhandler *handler, eventhandler **list) {
-	if (*list == NULL) {
-		*list = handler;
-	} else {
-		append_handler( handler, &( (*list)->next ) );
+	eventhandler **p = list;
+	while (*p != NULL) {
+		p = &( (*p)->next );
 	}
+	*p = handler;
 }
 
 int read_eventhandlers(const char *filename, eventhandler **list) {
@@ -86,27 +86,29 @@ int read_eventhandlers(const char *filename, eventhandler **list) {
 }
 
 void run_handlers(int type, int code, int value, eventhandler *list) {
-	if (list != NULL) {
-		if ( type  == list->type &&
-		     code  == list->code &&
-		     value == list->value ) {
-			fprintf(stderr, "Executing handler: %s\n", list->cmdline);
+	eventhandler *eh = list;
+	while (eh != NULL) {
+		if ( type  == eh->type &&
+		     code  == eh->code &&
+		     value == eh->value ) {
+			fprintf(stderr, "Executing handler: %s\n", eh->cmdline);
 			int pid = fork();
 			if (pid == 0 ) {
-				system(	list->cmdline );
+				system(	eh->cmdline );
 				exit(0);
 			}
 		}
-		/* traverse down the chain */
-		run_handlers(type, code, value, list->next);
+		eh = eh->next;
 	}
 }
 
 int count_handlers( eventhandler **list ) {
-	if (*list == NULL) {
-		return 0;
-	} else {
-		return 1 + count_handlers( &( (*list)->next ) );
+	int n = 0;
+	eventhandler *p = *list;
+	while ( p != NULL ) {
+		n++;
+		p = p->next;
 	}
+	return n;
 }
 
