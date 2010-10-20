@@ -14,42 +14,25 @@
 
 #include <stdlib.h>
 #include <sys/wait.h>
+#include <sys/select.h>
+#include <sys/time.h>
 
 #include "eventnames.h"
-#include "devreader.h"
+#include "device.h"
 #include "keystate.h"
 #include "triggerdir.h"
 #include "trigger.h"
 
-#ifndef NOTHREADS
+/* list of all devices with their FDs */
+static device *devs = NULL;
 
-#include <pthread.h>
-
-// PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP looks like a GNU thing
-#ifndef PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP
-#define PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP \
-{ { 0, 0, 0, PTHREAD_MUTEX_RECURSIVE_NP, 0, { 0 } } }
-#endif
-
-/* locked while processing an event */
-pthread_mutex_t processing_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-pthread_mutex_t readerlist_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-/* keeps track of the number of reader threads */
-pthread_cond_t readerlist_count_cv = PTHREAD_COND_INITIALIZER;
-
-#define LOCK(mutex) pthread_mutex_lock(&mutex)
-#define UNLOCK(mutex) pthread_mutex_unlock(&mutex)
-
-/* list of all devices with their handling threads */
-static devreader *readers = NULL;
-
+/* command FIFO */
 static char* command_pipe = NULL;
-#else
+static int cmdfd = -1;
 
-#define LOCK(x) 
-#define UNLOCK(x)
-
-#endif // NOTHREADS
+/* command buffer */
+#define MAXCMD 1024
+static char cmdbuffer[MAXCMD] = {};
 
 static char* script_basedir = NULL;
 static int dump_events = 0;
@@ -71,81 +54,57 @@ void print_event(char* dev, struct input_event ev) {
 }
 
 /*
- * Read events from device file, decode them and print them to STDOUT
+ * Read event from fd, decode it and pass it to handlers
  */
-int read_events(char *devname) {
-	int dev;
-	dev = open(devname, O_RDONLY);
-	if (dev < 0) {
-		fprintf(stderr, "Unable to open device file '%s': %s\n", devname, strerror(errno));
+int read_event( device *dev ) {
+	int fd = dev->fd;
+	char *devname = dev->devname;
+	struct input_event ev;
+	int n = read( fd, &ev, sizeof(ev) );
+	if ( n != sizeof(ev) ) {
+		fprintf(stderr, "Error reading device '%s'\n", dev->devname);
 		return 1;
-	} else {
-		struct input_event ev;
-		while(1) {
-			int n = read( dev, &ev, sizeof(ev) );
-			if ( n != sizeof(ev) ) {
-				fprintf(stderr, "Read error\n");
-				return 1;
-			}
-			/* ignore all events except KEY and SW */
-			if (ev.type == EV_KEY || ev.type == EV_SW) {
-				LOCK(processing_mutex);
-				change_keystate( *keystate, ev );
-				if (dump_events) {
-					print_event( devname, ev );
-					print_keystate( *keystate );
-				}
-				if (script_basedir != NULL)
-					run_triggerdir( script_basedir, ev );
-				run_triggers( ev.type, ev.code, ev.value );
-				UNLOCK(processing_mutex);
-			}
+	}
+	/* ignore all events except KEY and SW */
+	if (ev.type == EV_KEY || ev.type == EV_SW) {
+		change_keystate( *keystate, ev );
+		if (dump_events) {
+			print_event( devname, ev );
+			print_keystate( *keystate );
 		}
-		close(dev);
+		if (script_basedir != NULL) {
+			run_triggerdir( script_basedir, ev );
+		}
+		run_triggers( ev.type, ev.code, ev.value );
 	}
 	return 0;
 }
 
-#ifndef NOTHREADS
-void* reader_thread(void* ptr) {
-	// detach myself
-	pthread_detach(pthread_self());
-	char *devname;
-	devname = strdup((char *) ptr);
-	read_events( devname );
-	// thread has done its work, remove device from list
-	LOCK(readerlist_mutex);
-	remove_device( devname, &readers );
-	UNLOCK(readerlist_mutex);
-	// luckily, we don't pthread_cancel ourselves
-	fprintf(stderr, "Device %s removed\n", devname);
-	free(devname);
-	pthread_cond_signal(&readerlist_count_cv);
-}
-
-void add_device(char *dev, devreader **list) {
-	devreader **p = list;
+void add_device(char *dev, device **list) {
+	device **p = list;
 	// find end of list
 	while (*p != NULL) {
 		p = &( (*p)->next );
 	}
-	*p = malloc(sizeof(**list));
-	(*p)->devname = strdup(dev);
-	(*p)->next = NULL;
-	pthread_create( &((*p)->thread), NULL, &reader_thread, (void *)(*p)->devname );
+	int fd = open( dev, O_RDONLY );
+	if (fd >= 0) {
+		*p = malloc(sizeof(**list));
+		(*p)->devname = strdup(dev);
+		(*p)->fd = fd;
+		(*p)->next = NULL;
+	} else {
+		fprintf( stderr, "Error opening '%s': %s\n", dev, strerror(errno) );
+	}
 }
 
-int remove_device(char *dev, devreader **list) {
-	devreader **p = list;
+int remove_device(char *dev, device **list) {
+	device **p = list;
 	while (*p != NULL) {
 		if ( strcmp( (*p)->devname, dev ) == 0 ) {
-			devreader *copy = *p;
-			/* we don't cancel ourselves */
-			if (pthread_equal((*p)->thread, pthread_self()) == 0) {
-				pthread_cancel( (*p)->thread );
-			}
+			device *copy = *p;
 			/* bypass the list item */
 			*p = copy->next;
+			close(copy->fd);
 			free(copy->devname);
 			free(copy);
 			return 1;
@@ -157,9 +116,9 @@ int remove_device(char *dev, devreader **list) {
 	return 0;
 }
 
-int count_readers(devreader **list) {
+int count_devices(device **list) {
 	int n = 0;
-	devreader **p = list;
+	device **p = list;
 	while (*p != NULL) {
 		n++;
 		p = &( (*p)->next );
@@ -167,46 +126,135 @@ int count_readers(devreader **list) {
 	return n;
 }
 
-int read_commands(void) {
-	if (command_pipe == NULL) {
-		/* don't continue */
-		return 0;
+static int open_cmd(void) {
+	cmdfd = open( command_pipe, O_RDONLY | O_NONBLOCK );
+	if (cmdfd < 0) {
+		fprintf(stderr, "Unable to open command fifo '%s': %s\n", command_pipe, strerror(errno));
+		free(command_pipe);
+		command_pipe = NULL;
+		return 1;
 	}
-	FILE *pipe;
-	int len = 0;
-	char *line = NULL;
-	ssize_t read;
-	pipe = fopen(command_pipe, "r");
-	if (pipe == NULL) {
-		return 0;
-	}
-	while ((read = getline(&line, &len, pipe)) != -1) {
-		if (read < 1)
-			continue;
-
-		const char delimiters[] = " \t\n";
-		char *sptr;
-		char *op, *dev;
-		op = strtok_r( line, delimiters, &sptr );
-		dev = strtok_r( NULL, delimiters, &sptr );
-
-		LOCK(readerlist_mutex);
-		if (strcmp("ADD", op) == 0 && dev != NULL) {
-			fprintf(stderr, "Adding device '%s'\n", dev);
-			/* make sure we remove double devices */
-			remove_device( dev, &readers );
-			add_device( dev, &readers );
-		} else if (strcmp("REMOVE", op) == 0 && dev != NULL) {
-			fprintf(stderr, "Removing device '%s'\n", dev);
-			remove_device( dev, &readers );
-		}
-		UNLOCK(readerlist_mutex);
-	}
-	free(line);
-	return 1;
+	return 0;
 }
 
-#endif
+static void process_commandline( char *line ) {
+	const char delimiters[] = " \t";
+	char *op, *dev;
+	op = strtok( line, delimiters );
+	if (op == NULL) {
+		return;
+	}
+
+	dev = strtok( NULL, delimiters );
+
+	if (strcmp("ADD", op) == 0 && dev != NULL) {
+		fprintf(stderr, "Adding device '%s'\n", dev);
+		/* make sure we remove double devices */
+		remove_device( dev, &devs );
+		add_device( dev, &devs );
+	} else if (strcmp("REMOVE", op) == 0 && dev != NULL) {
+		fprintf(stderr, "Removing device '%s'\n", dev);
+		remove_device( dev, &devs );
+	}
+}
+
+static void read_command_pipe(void) {
+	/* length of command currently buffered */
+	int len = strlen(cmdbuffer);
+	/* remaining data to fill it */
+	int rem = MAXCMD - len;
+	char buf[rem];
+	int done = read( cmdfd, &buf, rem-1 );
+	if (done == 0) {
+		/* the client has closed the connection,
+		 * so we have to reopen the pipe and clear the buffer
+		 */
+		cmdbuffer[0] = '\0';
+		int r = close(cmdfd);
+		open_cmd();
+		return;
+	}
+	/* append the data read to our buffer - 
+	 * we made sure before that we do not read more
+	 * than we can handle
+	 */
+	strcat(cmdbuffer, buf);
+	/* do we have a newline yet? */
+	char *nl = NULL;
+	while ( nl = strchr(cmdbuffer, '\n') ) {
+		/* split and process */
+		*nl = '\0';
+		process_commandline( cmdbuffer );
+		cmdbuffer[0] = '\0';
+		/* now we copy the entire remaining string to the beginning */
+		if (nl < cmdbuffer+MAXCMD) {
+			/* TODO nice source of off-by-one-errors, I have to rethink this */
+			strcpy( cmdbuffer, nl+1 );
+		}
+	}
+}
+
+
+static int add_to_fdset( fd_set *fds, device **list ) {
+	int max = 0;
+	device **p = list;
+	while (*p != NULL) {
+		int fd = (*p)->fd;
+		if (fd > max) {
+			max = fd;
+		}
+
+		FD_SET( fd, fds );
+		p = &( (*p)->next );
+	}
+	return max;
+}
+
+void process_devices( fd_set *fds, device **list ) {
+	device **p = list;
+	while (*p != NULL) {
+		int fd = (*p)->fd;
+		char *dev = (*p)->devname;
+		if (FD_ISSET( fd, fds )) {
+			if (read_event( *p )) {
+				/* read error? Remove the device! */
+				remove_device( (*p)->devname, &devs );
+				return;
+			}
+		}
+		p = &( (*p)->next );
+	}
+}
+
+static void process_events( device **list ) {
+	fd_set rfds;
+	struct timeval tv;
+	int retval;
+	/* loop as long as we have at least one device or
+	 * the command channel
+	 */
+	while ( count_devices(&devs) > 0 || cmdfd != -1 ) {
+		FD_ZERO( &rfds );
+		int maxfd = 0;
+		maxfd = add_to_fdset( &rfds, &devs );
+		/* add command channel */
+		if (cmdfd != -1) {
+			FD_SET( cmdfd, &rfds );
+			maxfd = cmdfd > maxfd ? cmdfd : maxfd;
+		}
+		tv.tv_sec = 5;
+		tv.tv_usec = 0;
+		retval = select(maxfd+1, &rfds, NULL, NULL, &tv);
+		if (retval == -1) {
+			perror("select()");
+		} else if (retval) {
+			process_devices( &rfds, &devs );
+			if ( cmdfd != -1 && FD_ISSET( cmdfd, &rfds ) ) {
+				read_command_pipe();
+			}
+		}
+	}
+}
 
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
@@ -222,11 +270,9 @@ int main(int argc, char *argv[]) {
 			case 'e':
 				read_triggerfile(optarg);
 				break;
-#ifndef NOTHREADS
 			case 'c':
 				command_pipe = optarg;
 				break;
-#endif
 			case '?':
 				if (optopt == 's' || optopt == 'c') {
 					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
@@ -240,42 +286,28 @@ int main(int argc, char *argv[]) {
 	}
 	/* init keystate holder */
 	init_keystate_holder(&keystate);
-	printf("Initialized keystate_holder\n");
 	return start_readers(argc, argv, optind);
 }
 
 int start_readers(int argc, char *argv[], int start) {
-#ifndef NOTHREADS
 	if (argc-start < 1 && command_pipe == NULL) {
 		fprintf(stderr, "No input device files or command pipe specified.\n");
 		return 1;
 	}
+	/* open command pipe */
+	if (command_pipe) {
+		open_cmd();
+		if (cmdfd < 0) {
+			return 1;
+		}
+	}
+
 	// create one thread for every device file supplied
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
-		LOCK(readerlist_mutex);
-		add_device( dev, &readers );
-		UNLOCK(readerlist_mutex);
+		add_device( dev, &devs );
 	}
-
-	while (read_commands()) {}
-
-	// Now we have to wait until all threads terminate
-	LOCK(readerlist_mutex);
-	while(count_readers( &readers ) > 0) {
-		pthread_cond_wait(&readerlist_count_cv, &readerlist_mutex);
-	}
-	UNLOCK(readerlist_mutex);
-	fprintf(stderr, "Terminating...\n");
-
-#else
-	if (argc-start < 1) {
-		fprintf(stderr, "No input device files specified.\n");
-		return 1;
-	}
-	// without threading, we only handle the first device file named
-	read_events( argv[start] );
-#endif
+	process_events( &devs );
 	return 0;
 }
