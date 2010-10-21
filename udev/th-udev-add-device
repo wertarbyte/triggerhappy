@@ -1,0 +1,11 @@
+#!/bin/sh
+CMDPIPE="/var/run/thcmd"
+
+[ -p "$CMDPIPE" ] || exit
+
+# DEVNAME is set by udev
+[ -n "$DEVNAME" ] || exit
+
+if [ "$ACTION" = "add" ]; then
+	echo "ADD $DEVNAME" > "$CMDPIPE"
+fi
