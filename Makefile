@@ -1,4 +1,4 @@
-THD_COMPONENTS := thd keystate trigger eventnames triggerdir
+THD_COMPONENTS := thd keystate trigger eventnames
 THD_OBJS := $(THD_COMPONENTS:%=%.o)
 MAKEDEPEND = gcc -M $(CPPFLAGS) -o $*.d $<
 

@@ -20,7 +20,6 @@
 #include "eventnames.h"
 #include "device.h"
 #include "keystate.h"
-#include "triggerdir.h"
 #include "trigger.h"
 
 /* list of all devices with their FDs */
@@ -34,7 +33,6 @@ static int cmdfd = -1;
 #define MAXCMD 1024
 static char cmdbuffer[MAXCMD] = {};
 
-static char* script_basedir = NULL;
 static int dump_events = 0;
 
 static keystate_holder *keystate = NULL;
@@ -71,9 +69,6 @@ int read_event( device *dev ) {
 		if (dump_events) {
 			print_event( devname, ev );
 			print_keystate( *keystate );
-		}
-		if (script_basedir != NULL) {
-			run_triggerdir( script_basedir, ev );
 		}
 		run_triggers( ev.type, ev.code, ev.value );
 	}
@@ -263,9 +258,6 @@ int main(int argc, char *argv[]) {
 		switch (c) {
 			case 'd':
 				dump_events = 1;
-				break;
-			case 's':
-				script_basedir = optarg;
 				break;
 			case 'e':
 				read_triggerfile(optarg);
