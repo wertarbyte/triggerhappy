@@ -17,22 +17,23 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <getopt.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <stddef.h>
 
 #include "eventnames.h"
 #include "devices.h"
 #include "keystate.h"
 #include "trigger.h"
+#include "command.h"
+#include "cmdsocket.h"
+#include "obey.h"
 
 /* list of all devices with their FDs */
 static device *devs = NULL;
 
-/* command FIFO */
-static char* command_pipe = NULL;
-static int cmdfd = -1;
-
-/* command buffer */
-#define MAXCMD 1024
-static char cmdbuffer[MAXCMD] = {};
+static char *cmd_file = NULL;
+static int cmd_fd = -1;
 
 static int dump_events = 0;
 
@@ -76,75 +77,6 @@ int read_event( device *dev ) {
 	return 0;
 }
 
-static int open_cmd(void) {
-	cmdfd = open( command_pipe, O_RDONLY | O_NONBLOCK );
-	if (cmdfd < 0) {
-		fprintf(stderr, "Unable to open command fifo '%s': %s\n", command_pipe, strerror(errno));
-		free(command_pipe);
-		command_pipe = NULL;
-		return 1;
-	}
-	return 0;
-}
-
-static void process_commandline( char *line ) {
-	const char delimiters[] = " \t";
-	char *op, *dev;
-	op = strtok( line, delimiters );
-	if (op == NULL) {
-		return;
-	}
-
-	dev = strtok( NULL, delimiters );
-
-	if (strcmp("ADD", op) == 0 && dev != NULL) {
-		fprintf(stderr, "Adding device '%s'\n", dev);
-		/* make sure we remove double devices */
-		remove_device( dev, &devs );
-		add_device( dev, &devs );
-	} else if (strcmp("REMOVE", op) == 0 && dev != NULL) {
-		fprintf(stderr, "Removing device '%s'\n", dev);
-		remove_device( dev, &devs );
-	}
-}
-
-static void read_command_pipe(void) {
-	/* length of command currently buffered */
-	int len = strlen(cmdbuffer);
-	/* remaining data to fill it */
-	int rem = MAXCMD - len;
-	char buf[rem];
-	int done = read( cmdfd, &buf, rem-1 );
-	if (done == 0) {
-		/* the client has closed the connection,
-		 * so we have to reopen the pipe and clear the buffer
-		 */
-		cmdbuffer[0] = '\0';
-		int r = close(cmdfd);
-		open_cmd();
-		return;
-	}
-	/* append the data read to our buffer - 
-	 * we made sure before that we do not read more
-	 * than we can handle
-	 */
-	strcat(cmdbuffer, buf);
-	/* do we have a newline yet? */
-	char *nl = NULL;
-	while ( nl = strchr(cmdbuffer, '\n') ) {
-		/* split and process */
-		*nl = '\0';
-		process_commandline( cmdbuffer );
-		cmdbuffer[0] = '\0';
-		/* now we copy the entire remaining string to the beginning */
-		if (nl < cmdbuffer+MAXCMD) {
-			/* TODO nice source of off-by-one-errors, I have to rethink this */
-			strcpy( cmdbuffer, nl+1 );
-		}
-	}
-}
-
-
 static int add_to_fdset( fd_set *fds, device **list ) {
 	int max = 0;
 	device **p = list;
@@ -183,14 +115,14 @@ static void process_events( device **list ) {
 	/* loop as long as we have at least one device or
 	 * the command channel
 	 */
-	while ( count_devices(&devs) > 0 || cmdfd != -1 ) {
+	while ( count_devices(&devs) > 0 || cmd_fd != -1 ) {
 		FD_ZERO( &rfds );
 		int maxfd = 0;
 		maxfd = add_to_fdset( &rfds, &devs );
 		/* add command channel */
-		if (cmdfd != -1) {
-			FD_SET( cmdfd, &rfds );
-			maxfd = cmdfd > maxfd ? cmdfd : maxfd;
+		if (cmd_fd != -1) {
+			FD_SET( cmd_fd, &rfds );
+			maxfd = cmd_fd > maxfd ? cmd_fd : maxfd;
 		}
 		tv.tv_sec = 5;
 		tv.tv_usec = 0;
@@ -199,8 +131,10 @@ static void process_events( device **list ) {
 			perror("select()");
 		} else if (retval) {
 			process_devices( &rfds, &devs );
-			if ( cmdfd != -1 && FD_ISSET( cmdfd, &rfds ) ) {
-				read_command_pipe();
+			if ( cmd_fd != -1 && FD_ISSET( cmd_fd, &rfds ) ) {
+				struct command *cmd = read_command( cmd_fd );
+				obey_command( cmd, &devs );
+				free(cmd);
 			}
 		}
 	}
@@ -209,7 +143,7 @@ static void process_events( device **list ) {
 static struct option long_options[] = {
 	{"dump",	no_argument, &dump_events, 1},
 	{"triggers",	required_argument, 0, 't'},
-	{"command",	required_argument, 0, 'c'},
+	{"socket",	required_argument, 0, 's'},
 	{"help",	no_argument, 0, 'h'},
 	{0,0,0,0} /* end of list */
 };
@@ -222,7 +156,7 @@ void show_help(void) {
 	printf( "  --help             Display this help message\n" );
 	printf( "  --dump             Dump events to console\n");
 	printf( "  --triggers <file>  Load trigger definitions from <file>\n");
-	printf( "  --command <fifo>   Read commands from <fifo>\n");
+	printf( "  --socket <socket>  Read commands from socket\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -230,7 +164,7 @@ int main(int argc, char *argv[]) {
 	int option_index = 0;
 	int c;
 	while (1) {
-		c = getopt_long (argc, argv, "t:c:dh", long_options, &option_index);
+		c = getopt_long (argc, argv, "t:s:dh", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
@@ -250,8 +184,8 @@ int main(int argc, char *argv[]) {
 			case 't':
 				read_triggerfile(optarg);
 				break;
-			case 'c':
-				command_pipe = optarg;
+			case 's':
+				cmd_file = optarg;
 				break;
 			case 'h':
 				show_help();
@@ -267,14 +201,14 @@ int main(int argc, char *argv[]) {
 }
 
 int start_readers(int argc, char *argv[], int start) {
-	if (argc-start < 1 && command_pipe == NULL) {
+	if (argc-start < 1 && cmd_file == NULL) {
 		fprintf(stderr, "No input device files or command pipe specified.\n");
 		return 1;
 	}
 	/* open command pipe */
-	if (command_pipe) {
-		open_cmd();
-		if (cmdfd < 0) {
+	if (cmd_file) {
+		cmd_fd = bind_cmdsocket(cmd_file);
+		if (cmd_fd < 0) {
 			return 1;
 		}
 	}

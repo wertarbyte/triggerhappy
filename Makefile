@@ -1,15 +1,17 @@
-THD_COMPONENTS := thd keystate trigger eventnames devices
+THD_COMPONENTS := thd keystate trigger eventnames devices cmdsocket obey
 THD_OBJS := $(THD_COMPONENTS:%=%.o)
 MAKEDEPEND = gcc -M $(CPPFLAGS) -o $*.d $<
 
-all: thd
+all: thd th-cmd
 
 thd: $(THD_OBJS)
 
+th-cmd: th-cmd.o cmdsocket.o
+
 clean:
-	rm $(THD_COMPONENTS:%=%.d)
-	rm $(THD_COMPONENTS:%=%.o)
-	rm thd
+	rm *.d
+	rm *.o
+	rm thd th-cmd
 
 %.d : %.c
 	$(MAKEDEPEND)
