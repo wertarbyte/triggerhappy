@@ -13,10 +13,10 @@ Examples:
 
 Dump all events received through two device files:
 
-	thd -d /dev/input/event0 /dev/input/event1
+	thd --dump /dev/input/event0 /dev/input/event1
 
-Event handlers can be defined in a configuration file (specified by -e) of
-the following format:
+Event handlers can be defined in a configuration file (specified by --triggers)
+of the following format:
 
 <event name>	<event value>	<command line>
 

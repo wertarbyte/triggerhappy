@@ -16,6 +16,7 @@
 #include <sys/wait.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <getopt.h>
 
 #include "eventnames.h"
 #include "device.h"
@@ -251,28 +252,58 @@ static void process_events( device **list ) {
 	}
 }
 
+static struct option long_options[] = {
+	{"dump",	no_argument, &dump_events, 1},
+	{"triggers",	required_argument, 0, 't'},
+	{"command",	required_argument, 0, 'c'},
+	{"help",	no_argument, 0, 'h'},
+	{0,0,0,0} /* end of list */
+};
+
+void show_help(void) {
+	printf( "Triggerhappy event daemon\n\n" );
+	printf( "Usage:\n" );
+	printf( "  thd [switches] [devices]\n\n" );
+	printf( "Command line switches:\n" );
+	printf( "  --help             Display this help message\n" );
+	printf( "  --dump             Dump events to console\n");
+	printf( "  --triggers <file>  Load trigger definitions from <file>\n");
+	printf( "  --command <fifo>   Read commands from <fifo>\n");
+}
+
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
+	int option_index = 0;
 	int c;
-	while ((c = getopt(argc, argv, "ds:c:e:")) != -1) {
+	while (1) {
+		c = getopt_long (argc, argv, "t:c:dh", long_options, &option_index);
+		if (c == -1) {
+			break;
+		}
 		switch (c) {
-			case 'd':
+			case 0:
+				if (long_options[option_index].flag != 0) {
+					break;
+				}
+				printf ("option %s", long_options[option_index].name);
+				if (optarg)
+					printf (" with arg %s", optarg);
+				printf ("\n");
+				break;
+			case 'd': /* short for --dump */
 				dump_events = 1;
 				break;
-			case 'e':
+			case 't':
 				read_triggerfile(optarg);
 				break;
 			case 'c':
 				command_pipe = optarg;
 				break;
+			case 'h':
+				show_help();
+				return 0;
 			case '?':
-				if (optopt == 's' || optopt == 'c') {
-					fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-				} else if (isprint(optopt)) {
-					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-				} else {
-					fprintf(stderr, "Unknown option character\n");
-				}
+			default:
 				return 1;
 		}
 	}
