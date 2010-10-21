@@ -19,7 +19,7 @@
 #include <getopt.h>
 
 #include "eventnames.h"
-#include "device.h"
+#include "devices.h"
 #include "keystate.h"
 #include "trigger.h"
 
@@ -74,52 +74,6 @@ int read_event( device *dev ) {
 		run_triggers( ev.type, ev.code, ev.value );
 	}
 	return 0;
-}
-
-void add_device(char *dev, device **list) {
-	device **p = list;
-	// find end of list
-	while (*p != NULL) {
-		p = &( (*p)->next );
-	}
-	int fd = open( dev, O_RDONLY );
-	if (fd >= 0) {
-		*p = malloc(sizeof(**list));
-		(*p)->devname = strdup(dev);
-		(*p)->fd = fd;
-		(*p)->next = NULL;
-	} else {
-		fprintf( stderr, "Error opening '%s': %s\n", dev, strerror(errno) );
-	}
-}
-
-int remove_device(char *dev, device **list) {
-	device **p = list;
-	while (*p != NULL) {
-		if ( strcmp( (*p)->devname, dev ) == 0 ) {
-			device *copy = *p;
-			/* bypass the list item */
-			*p = copy->next;
-			close(copy->fd);
-			free(copy->devname);
-			free(copy);
-			return 1;
-		}
-		/* advance to the next node */
-		p = &( (*p)->next );
-	}
-	/* reached the end of the list */
-	return 0;
-}
-
-int count_devices(device **list) {
-	int n = 0;
-	device **p = list;
-	while (*p != NULL) {
-		n++;
-		p = &( (*p)->next );
-	}
-	return n;
 }
 
 static int open_cmd(void) {
