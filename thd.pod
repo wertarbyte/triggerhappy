@@ -6,7 +6,7 @@ thd -- triggerhappy global hotkey daemon
 
 =head1 SYNOPSIS
 
-B<thd> [B<--help>] [B<--dump>] [B<--command> I<socket>] [B<--trigger> I<config>] [I<devices...>]
+B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--trigger> I<config>] [I<devices...>]
 
 =head1 DESCRIPTION
 
@@ -31,7 +31,7 @@ Read trigger definitions from F<file>
 
 Dump all recognized events to STDOUT
 
-=item B<--command> F<file>
+=item B<--socket> F<file>
 
 Open a unix domain socket at F<file>; this socket can be used to send commands to the running daemon (by using the program L<th-cmd>), e.g. for adding or removing devices.
 
@@ -66,7 +66,7 @@ B<thd --triggers /etc/triggerhappy/triggers.conf /dev/input/event*>
 
 Read from all currently connected input devices and process events according to the file F</etc/triggerhappy/triggers.conf>.
 
-B<thd --triggers /etc/triggerhappy/triggers.conf --command /var/run/thd>
+B<thd --triggers /etc/triggerhappy/triggers.conf --socket /var/run/triggerhappy.socket>
 
 Do not open any input devices yet, but bind the socket F</var/run/thd> for L<th-cmd> to connect to.
 

@@ -6,7 +6,7 @@ th-cmd -- triggerhappy commander
 
 =head1 SYNOPSIS
 
-B<th-cmd> B<< <socket> >> B<add>|B<remove> B<< <device> >>
+B<th-cmd> B<< <socket> >> udev|[B<add>|B<remove> B<< <device> >>]
 
 =head1 DESCRIPTION
 
@@ -27,6 +27,10 @@ Add input device to the running daemon.
 =item B<remove> B<< <device> >>
 
 Remove input device from the running daemon.
+
+=item B<udev>
+
+Deduce operation and device name from udev environment (for use in udev rules).
 
 =back
 

@@ -32,12 +32,13 @@ holding it; releasing it yields a value of 0.
 
 Devices can be added dynamically by specifying a command socket:
 
-thd --socket /var/run/triggerhappy --triggers /etc/triggerhappy.conf
+thd --socket /var/run/triggerhappy.socket --triggers /etc/triggerhappy.conf
 
 The program th-cmd is used to add new devices to the daemon:
 
-th-cmd /var/run/triggerhappy add /dev/input/event0
-th-cmd /var/run/triggerhappy remove /dev/input/event3
+th-cmd /var/run/triggerhappy.socket add /dev/input/event0
+th-cmd /var/run/triggerhappy.socket remove /dev/input/event3
 
 An example udev script is also included to facilitate this hotplug
-support.
+support - for this use, th-cmd can handle the parameter "udev" to
+deduce the device name and action from the udev environment.
