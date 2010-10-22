@@ -72,7 +72,7 @@ int read_event( device *dev ) {
 			print_event( devname, ev );
 			print_keystate( *keystate );
 		}
-		run_triggers( ev.type, ev.code, ev.value );
+		run_triggers( ev.type, ev.code, ev.value, *keystate );
 	}
 	return 0;
 }

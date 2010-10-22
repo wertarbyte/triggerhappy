@@ -1,8 +1,9 @@
-#include "trigger.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include "eventnames.h"
+#include "keystate.h"
+#include "trigger.h"
 
 trigger *TRIGGER_LIST = NULL;
 
@@ -88,7 +89,7 @@ int read_triggerfile(const char *filename) {
 	return 0;
 }
 
-void run_triggers(int type, int code, int value) {
+void run_triggers(int type, int code, int value, keystate_holder ksh) {
 	trigger *et = TRIGGER_LIST;
 	while (et != NULL) {
 		if ( type  == et->type &&
@@ -97,6 +98,13 @@ void run_triggers(int type, int code, int value) {
 			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
 			int pid = fork();
 			if (pid == 0 ) {
+				/* adjust environment */
+				setenv( "TH_KEYSTATE", get_keystate(ksh), 1 );
+				char *en = lookup_event_name_i( et->type, et->code );
+				setenv( "TH_EVENT", en, 1 );
+				char ev[8];
+				sprintf( &(ev[0]), "%d", et->value );
+				setenv( "TH_VALUE", &(ev[0]), 1 );
 				system(	et->cmdline );
 				exit(0);
 			}
