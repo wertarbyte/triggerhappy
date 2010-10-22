@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <linux/input.h>
 #include <stdlib.h>
+#include <string.h>
 #include "eventnames.h"
 #include "keystate.h"
 
@@ -43,14 +44,31 @@ void change_keystate( keystate_holder ksh, struct input_event ev ) {
  * Print the concatenated names of all currently pressed keys
  */
 void print_keystate(keystate_holder ksh) {
+	char *str = get_keystate(ksh);
+	printf("%s\n", str);
+	free(str);
+}
+
+char *get_keystate(keystate_holder ksh) {
+	const int bsize = 1024;
+	char *KS = "+";
+
+	char buf[bsize];
+	buf[0] = '\0';
+
 	int i;
 	int n = 0;
-	printf("STATE\t");
 	for (i=0; i<=KEY_MAX; i++) {
 		if (ksh[i] > 0) {
-			printf("%s%s", (n>0?"+":""), lookup_event_name_i(EV_KEY, i));
+			if (n>0) {
+				strncat( buf, KS, bsize-1-strlen(KS) );
+			}
+			char *name = lookup_event_name_i(EV_KEY, i);
+			strncat( &(buf[0]), name, bsize-1-strlen(buf) );
 			n++;
 		}
 	}
-	printf("\n");
+	char *res = malloc( sizeof(char) * (1+strlen(buf)) );
+	strcpy( res, buf );
+	return res;
 }
