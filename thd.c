@@ -36,6 +36,9 @@ static char *cmd_file = NULL;
 static int cmd_fd = -1;
 
 static int dump_events = 0;
+static int run_as_daemon = 0;
+
+static char *pidfile = NULL;
 
 static keystate_holder *keystate = NULL;
 
@@ -140,8 +143,20 @@ static void process_events( device **list ) {
 	}
 }
 
+static int write_pidfile( char *pidfile ) {
+	FILE *pid = fopen( pidfile, "w+" );
+	if (pid == NULL) {
+		return 1;
+	}
+	fprintf(pid, "%u\n", getpid());
+	fclose(pid);
+	return 0;
+}
+
 static struct option long_options[] = {
 	{"dump",	no_argument, &dump_events, 1},
+	{"daemon",	no_argument, &run_as_daemon, 1},
+	{"pidfile",	required_argument, 0, 'p'},
 	{"triggers",	required_argument, 0, 't'},
 	{"socket",	required_argument, 0, 's'},
 	{"help",	no_argument, 0, 'h'},
@@ -154,6 +169,7 @@ void show_help(void) {
 	printf( "  thd [switches] [devices]\n\n" );
 	printf( "Command line switches:\n" );
 	printf( "  --help             Display this help message\n" );
+	printf( "  --daemon           Run as daemon process\n");
 	printf( "  --dump             Dump events to console\n");
 	printf( "  --triggers <file>  Load trigger definitions from <file>\n");
 	printf( "  --socket <socket>  Read commands from socket\n");
@@ -164,7 +180,7 @@ int main(int argc, char *argv[]) {
 	int option_index = 0;
 	int c;
 	while (1) {
-		c = getopt_long (argc, argv, "t:s:dh", long_options, &option_index);
+		c = getopt_long (argc, argv, "t:s:dhp", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
@@ -180,6 +196,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'd': /* short for --dump */
 				dump_events = 1;
+				break;
+			case 'p': /* short for --pidfile */
+				pidfile = optarg;
 				break;
 			case 't':
 				read_triggerfile(optarg);
@@ -218,6 +237,15 @@ int start_readers(int argc, char *argv[], int start) {
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
 		add_device( dev, &devs );
+	}
+	if (run_as_daemon) {
+		int err = daemon(0,0);
+		if (err) {
+			perror("daemon()");
+		}
+	}
+	if (pidfile) {
+		write_pidfile( pidfile );
 	}
 	process_events( &devs );
 	return 0;

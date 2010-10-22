@@ -6,7 +6,7 @@ thd -- triggerhappy global hotkey daemon
 
 =head1 SYNOPSIS
 
-B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--trigger> I<config>] [I<devices...>]
+B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--trigger> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [I<devices...>]
 
 =head1 DESCRIPTION
 
@@ -34,6 +34,14 @@ Dump all recognized events to STDOUT
 =item B<--socket> F<file>
 
 Open a unix domain socket at F<file>; this socket can be used to send commands to the running daemon (by using the program L<th-cmd>), e.g. for adding or removing devices.
+
+=item B<--daemon>
+
+Run as a background daemon and detach from the terminal.
+
+=item B<--pidfile> F<file>
+
+Write PID to F<file>.
 
 =back
 
