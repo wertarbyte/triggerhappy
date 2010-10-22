@@ -1,0 +1,36 @@
+=pod
+
+=head1 NAME
+
+th-cmd -- triggerhappy commander
+
+=head1 SYNOPSIS
+
+B<th-cmd> B<< <socket> >> B<add>|B<remove> B<< <device> >>
+
+=head1 DESCRIPTION
+
+THis program is used to issue commands to a running triggerhappy daemon. It utilizes an unix domain socket bound by the daemon.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over
+
+=item B<< <socket> >>
+
+The socket file opened by the running triggerhappy daemon instance.
+
+=item B<add> B<< <device> >>
+
+Add input device to the running daemon.
+
+=item B<remove> B<< <device> >>
+
+Remove input device from the running daemon.
+
+=back
+
+=head1 AUTHOR
+
+Stefan Tomanek E<lt>opensource+triggerhappy@wertarbyte.deE<gt>
+

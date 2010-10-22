@@ -1,0 +1,91 @@
+=pod
+
+=head1 NAME
+
+thd -- triggerhappy global hotkey daemon
+
+=head1 SYNOPSIS
+
+B<thd> [B<--help>] [B<--dump>] [B<--command> I<socket>] [B<--trigger> I<config>] [I<devices...>]
+
+=head1 DESCRIPTION
+
+Triggerhappy is a hotkey daemon that operates on a system wide scale. It watches all configured input devices
+for key, switch or button events and can launch arbitrary commands specified by the administrator. In contrast
+to hotkey services provided by desktop environments, Triggerhappy is especially suited to hardware related switches
+like volume or wifi control; it works independently from a specific user being logged in and is also suitable for embedded systems that do not a graphical user interface.
+
+=head1 OPTIONS AND ARGUMENTS
+
+=over
+
+=item B<--help>
+
+Shows usage instructions
+
+=item B<--triggers> F<conf>
+
+Read trigger definitions from F<file>
+
+=item B<--dump>
+
+Dump all recognized events to STDOUT
+
+=item B<--command> F<file>
+
+Open a unix domain socket at F<file>; this socket can be used to send commands to the running daemon (by using the program L<th-cmd>), e.g. for adding or removing devices.
+
+=back
+
+Additional command line arguments are considered filenames of input devices.
+
+=head1 CONFIGURATION
+
+=head2 Handling key combinations and switch state changes
+
+The hotkey bindings used by Triggerhappy are set in the configuration file specified by B<--triggers>. Each line consists of three segments:
+The symbolic name of the key or event name to react on, the value carried by the expected event, and of course the command to be launched.
+
+The event names can be identified by operating the desired key or switch while running the triggerhappy daemon with the option B<--dump>.
+
+Key events carry the value I<1> for a key being pressed and transmit the payload I<0> when it is released; holding the key down constantly yields events with a value of I<2>.
+
+The command can include any number of arguments. Please include the full path to avoid trouble through different $PATH settings for the daemon and your interactive session.
+
+The three fields are seperated by an arbitrary number of whitespaces, while anything behind a # character is ignored and considered a comment.
+
+=head1 EXAMPLE
+
+=head2 Starting the daemon
+
+B<thd --dump /dev/input/event*>
+
+Dump all events processable by thd to the console; this is useful to find out the correct event name for a specific key.
+
+B<thd --triggers /etc/triggerhappy/triggers.conf /dev/input/event*>
+
+Read from all currently connected input devices and process events according to the file F</etc/triggerhappy/triggers.conf>.
+
+B<thd --triggers /etc/triggerhappy/triggers.conf --command /var/run/thd>
+
+Do not open any input devices yet, but bind the socket F</var/run/thd> for L<th-cmd> to connect to.
+
+=head2 Configuration files
+
+Any number of event handlers can be placed in the configuration file:
+
+    # /etc/triggerhappy/triggers.conf
+    #
+    # Suspend the system
+    KEY_SLEEP       1       /usr/sbin/hibernate-ram
+    
+    # Change mixer volume when pressing the appropiate keys (or holding them)
+    KEY_VOLUMEUP    1      /usr/bin/amixer set Master 5%+
+    KEY_VOLUMEUP    2      /usr/bin/amixer set Master 5%+
+    KEY_VOLUMEDOWN  1      /usr/bin/amixer set Master 5%-
+    KEY_VOLUMEDOWN  2      /usr/bin/amixer set Master 5%-
+    
+=head1 AUTHOR
+
+Stefan Tomanek E<lt>opensource+triggerhappy@wertarbyte.deE<gt>
+
