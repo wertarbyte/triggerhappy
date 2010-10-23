@@ -1,8 +1,3 @@
-/*
- * keystate.c
- * by Stefan Tomanek <stefan.tomanek@wertarbyte.de>
- */
-
 #include <stdio.h>
 #include <linux/input.h>
 #include <stdlib.h>

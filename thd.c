@@ -1,6 +1,6 @@
 /*
  * thd.c - the triggerhappy daemon
- * by Stefan Tomanek <stefan.tomanek@wertarbyte.de>
+ * by Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>
  */
 
 #include <stdio.h>

@@ -40,5 +40,5 @@ Terminate the triggerhappy daemon.
 
 =head1 AUTHOR
 
-Stefan Tomanek E<lt>opensource+triggerhappy@wertarbyte.deE<gt>
+Stefan Tomanek E<lt>stefan.tomanek+th@wertarbyte.deE<gt>
 
