@@ -3,4 +3,4 @@ thd.1
 th-cmd
 th-cmd.1
 *.o
-*.d
+./*.d
