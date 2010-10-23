@@ -52,7 +52,11 @@ struct command *read_command( int cmd_fd ) {
 int send_command( int cmd_fd, enum command_type type, char *param ) {
 	struct command cmd;
 	cmd.type = type;
-	strcpy(cmd.param, param);
+	if (param != NULL) {
+		strcpy(cmd.param, param);
+	} else {
+		cmd.param[0] = '\0';
+	}
 	int done = write( cmd_fd, &cmd, sizeof(struct command) );
 	return (done != sizeof(struct command));
 }

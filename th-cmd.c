@@ -20,6 +20,8 @@ int main(int argc, char *argv[]) {
 		if (op == NULL || dev == NULL) {
 			return 1;
 		}
+	} else if (argc == 3 && (strcasecmp( "quit", argv[2] ) == 0) ) {
+		op = "quit";
 	} else if (argc == 4) {
 		op = argv[2];
 		dev = argv[4];
@@ -41,6 +43,8 @@ int main(int argc, char *argv[]) {
 		err = send_command( s, CMD_ADD, dev );
 	} else if ( strcasecmp( "remove", op ) == 0 ) {
 		err = send_command( s, CMD_REMOVE, dev );
+	} else if ( strcasecmp( "quit", op ) == 0 ) {
+		err = send_command( s, CMD_QUIT, dev );
 	} else {
 		fprintf( stderr, "Unknown command: %s\n", op);
 	}

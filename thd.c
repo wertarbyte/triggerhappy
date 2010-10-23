@@ -21,6 +21,7 @@
 #include <sys/un.h>
 #include <stddef.h>
 
+#include "thd.h"
 #include "eventnames.h"
 #include "devices.h"
 #include "keystate.h"
@@ -175,6 +176,19 @@ void show_help(void) {
 	printf( "  --socket <socket>  Read commands from socket\n");
 }
 
+void cleanup(void) {
+	if (cmd_file) {
+		if (cmd_fd != -1) {
+			close( cmd_fd );
+		}
+		unlink(cmd_file);
+	}
+	clear_devices( &devs );
+	if (pidfile) {
+		unlink(pidfile);
+	}
+}
+
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
 	int option_index = 0;
@@ -248,5 +262,7 @@ int start_readers(int argc, char *argv[], int start) {
 		write_pidfile( pidfile );
 	}
 	process_events( &devs );
+
+	cleanup();
 	return 0;
 }

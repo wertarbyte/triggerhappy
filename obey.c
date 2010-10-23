@@ -11,5 +11,8 @@ int obey_command( struct command *cmd, device **list ) {
 		remove_device( &(cmd->param[0]), list );
 		return 0;
 	}
+	if (cmd->type == CMD_QUIT) {
+		cleanup();
+	}
 	return 1;
 }
