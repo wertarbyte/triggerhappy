@@ -43,6 +43,8 @@ static char *pidfile = NULL;
 
 static keystate_holder *keystate = NULL;
 
+static int exiting = 0;
+
 /*
  * Look up event and key names and print them to STDOUT
  */
@@ -133,6 +135,8 @@ static void process_events( device **list ) {
 		retval = select(maxfd+1, &rfds, NULL, NULL, &tv);
 		if (retval == -1) {
 			perror("select()");
+		} else if (exiting) {
+			break;
 		} else if (retval) {
 			process_devices( &rfds, &devs );
 			if ( cmd_fd != -1 && FD_ISSET( cmd_fd, &rfds ) ) {
@@ -189,6 +193,10 @@ void cleanup(void) {
 	}
 }
 
+static void handle_signal(int sig) {
+	exiting = 1;
+}
+
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
 	int option_index = 0;
@@ -230,6 +238,14 @@ int main(int argc, char *argv[]) {
 	}
 	/* init keystate holder */
 	init_keystate_holder(&keystate);
+	/* install signal handler */
+	struct sigaction handler;
+	handler.sa_handler = handle_signal;
+	sigfillset(&handler.sa_mask);
+	handler.sa_flags=0;
+	sigaction(SIGINT,&handler,0);
+	sigaction(SIGTERM,&handler,0);
+
 	return start_readers(argc, argv, optind);
 }
 

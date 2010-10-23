@@ -47,14 +47,13 @@ int remove_device(char *dev, device **list) {
 
 void clear_devices(device **list) {
 	device **p = list;
-	while (*p != NULL) {
-		device *copy = *p;
-		*p = copy->next;
-		close(copy->fd);
-		fprintf(stderr, "Removing %s\n", copy->devname);
-		free(copy->devname);
-		free(copy);
-		p = &( (*p)->next );
+	if (*p != NULL) {
+		clear_devices( &( (*p)->next ) );
+		fprintf(stderr, "Removing %s\n", (*p)->devname);
+		close((*p)->fd);
+		free((*p)->devname);
+		free(*p);
+		p = NULL;
 	}
 }
 

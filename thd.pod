@@ -75,9 +75,9 @@ B<thd --triggers /etc/triggerhappy/triggers.conf /dev/input/event*>
 
 Read from all currently connected input devices and process events according to the file F</etc/triggerhappy/triggers.conf>.
 
-B<thd --triggers /etc/triggerhappy/triggers.conf --socket /var/run/triggerhappy.socket>
+B<thd --triggers /etc/triggerhappy/triggers.conf --socket /var/run/thd.socket>
 
-Do not open any input devices yet, but bind the socket F</var/run/thd> for L<th-cmd> to connect to.
+Do not open any input devices yet, but bind the socket F</var/run/thd.socket> for L<th-cmd> to connect to.
 
 =head2 Configuration files
 
