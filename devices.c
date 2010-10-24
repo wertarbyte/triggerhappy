@@ -46,15 +46,16 @@ int remove_device(char *dev, device **list) {
 }
 
 void clear_devices(device **list) {
-	device **p = list;
-	if (*p != NULL) {
-		clear_devices( &( (*p)->next ) );
-		fprintf(stderr, "Removing %s\n", (*p)->devname);
-		close((*p)->fd);
-		free((*p)->devname);
-		free(*p);
-		p = NULL;
+	device *p = *list;
+	while (p != NULL) {
+		device *next = p->next;
+		fprintf(stderr, "Removing %s\n", p->devname);
+		close(p->fd);
+		free(p->devname);
+		free(p);
+		p = next;
 	}
+	*list = NULL;
 }
 
 int count_devices(device **list) {
