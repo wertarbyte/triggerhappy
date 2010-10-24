@@ -93,7 +93,7 @@ int read_triggerfile(const char *filename) {
 		trigger *t = parse_trigger( line );
 		if (t) {
 			append_trigger( t );
-		} else {
+		} else if (strlen(line) > 0) {
 			fprintf(stderr, "Unable to parse trigger line: %s\n", line);
 		}
 	}
