@@ -1,5 +1,7 @@
 # adjust volume
-KEY_VOLUMEUP    1     /usr/bin/amixer set Master 5%+ 
-KEY_VOLUMEUP    2     /usr/bin/amixer set Master 5%+ # even while holding
-KEY_VOLUMEDOWN  1     /usr/bin/amixer set Master 5%-
-KEY_VOLUMEDOWN  2     /usr/bin/amixer set Master 5%-
+KEY_VOLUMEUP			1	/usr/bin/amixer set Master 5%+
+KEY_VOLUMEUP+KEY_LEFTSHIFT	1	/usr/bin/amixer set Master 15%+ # with modifier
+KEY_VOLUMEUP			2	/usr/bin/amixer set Master 5%+ # even while holding
+KEY_VOLUMEDOWN			1	/usr/bin/amixer set Master 5%-
+KEY_VOLUMEDOWN+KEY_LEFTSHIFT	1	/usr/bin/amixer set Master 15%-
+KEY_VOLUMEDOWN			2	/usr/bin/amixer set Master 5%-

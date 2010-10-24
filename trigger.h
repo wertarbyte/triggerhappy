@@ -1,7 +1,12 @@
+#define TRIGGER_MODIFIERS_MAX 5
+
+typedef int trigger_modifier[TRIGGER_MODIFIERS_MAX];
+
 typedef struct trigger {
 	int type;
 	int code;
 	int value;
+	trigger_modifier modifiers;
 	char *cmdline;
 	struct trigger *next;
 } trigger;

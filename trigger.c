@@ -27,17 +27,28 @@ static char* ct(char *token) {
 trigger* parse_trigger(char* line) {
 	char *token = NULL;
 	char *sptr = NULL;
-	char *cp = strdup(line);
 
 	/* ignore everything behind # */
 	char *comment = strchr(line, '#');
 	if ( comment != NULL ) {
 		*comment = '\0';
 	}
+	char *cp = strdup(line);
 
 	char *delim = " \t\n";
 
-	char *evname = ct( strtok_r(cp, delim, &sptr) );
+	char *evdef = strtok_r(cp, delim, &sptr);
+	/* extract modifier */
+	char *sptr2 = NULL;
+	char *evname = ct( strtok_r(cp, "+", &sptr2) );
+	/* build array of modifier keycodes */
+	trigger_modifier modifier;
+	int n = 0;
+	while (n < TRIGGER_MODIFIERS_MAX) {
+		char *evmod = strtok_r(NULL, "+", &sptr2);
+		modifier[n] = evmod ? lookup_event_code(evmod) : -1;
+		n++;
+	}
 	int value = strint( strtok_r(NULL, delim, &sptr) );
 	char *cmd = ct( strtok_r(NULL, "\n", &sptr) );
 	free(cp);
@@ -49,6 +60,8 @@ trigger* parse_trigger(char* line) {
 		et->code = lookup_event_code( evname );
 		et->value = value;
 		et->cmdline = cmd;
+		/* store keystate */
+		memcpy(et->modifiers, modifier, sizeof(trigger_modifier));
 		et->next = NULL;
 		return et;
 	} else {
@@ -89,12 +102,27 @@ int read_triggerfile(const char *filename) {
 	return 0;
 }
 
+static int mods_satisfied( keystate_holder ksh, trigger_modifier tm ) {
+	int n = 0;
+	while ( n < TRIGGER_MODIFIERS_MAX ) {
+		int code = tm[n]; /* this key must be pressed */
+		if (code < 0) {
+			break;
+		} else if (ksh[code] <= 0) {
+			return 0;
+		}
+		n++;
+	}
+	return 1;
+}
+
 void run_triggers(int type, int code, int value, keystate_holder ksh) {
 	trigger *et = TRIGGER_LIST;
 	while (et != NULL) {
 		if ( type  == et->type &&
 		     code  == et->code &&
-		     value == et->value ) {
+		     value == et->value &&
+		     mods_satisfied(ksh, et->modifiers)) {
 			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
 			int pid = fork();
 			if (pid == 0 ) {

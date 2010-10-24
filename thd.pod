@@ -86,7 +86,8 @@ Any number of event handlers can be placed in the configuration file:
     # /etc/triggerhappy/triggers.conf
     #
     # Suspend the system
-    KEY_SLEEP       1       /usr/sbin/hibernate-ram
+    KEY_SLEEP                   1       /usr/sbin/hibernate-ram
+    KEY_SLEEP+KEY_LEFTSHIFT     1       /usr/sbin/hibernate-disk
     
     # Change mixer volume when pressing the appropiate keys (or holding them)
     KEY_VOLUMEUP    1      /usr/bin/amixer set Master 5%+
