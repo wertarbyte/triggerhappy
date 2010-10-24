@@ -39,6 +39,7 @@ static int cmd_fd = -1;
 static int dump_events = 0;
 static int run_as_daemon = 0;
 
+static char *triggerfile = NULL;
 static char *pidfile = NULL;
 
 static keystate_holder *keystate = NULL;
@@ -133,7 +134,7 @@ static void process_events( device **list ) {
 		tv.tv_sec = 5;
 		tv.tv_usec = 0;
 		retval = select(maxfd+1, &rfds, NULL, NULL, &tv);
-		if (retval == -1) {
+		if (retval == -1 && errno != EINTR) {
 			perror("select()");
 		} else if (exiting) {
 			break;
@@ -193,8 +194,28 @@ void cleanup(void) {
 	}
 }
 
+static int reload_triggerfile(void) {
+	if (triggerfile) {
+		int err = read_triggerfile(triggerfile);
+		if (err) {
+			fprintf(stderr, "Error loading triggerfile '%s'\n", triggerfile);
+			return 1;
+		}
+	}
+	return 0;
+}
+
 static void handle_signal(int sig) {
-	exiting = 1;
+	switch (sig) {
+		case SIGINT:
+		case SIGTERM:
+			exiting = 1;
+			break;
+		case SIGHUP:
+			fprintf(stderr, "Reloading config...\n");
+			reload_triggerfile();
+			break;
+	}
 }
 
 int main(int argc, char *argv[]) {
@@ -223,7 +244,7 @@ int main(int argc, char *argv[]) {
 				pidfile = optarg;
 				break;
 			case 't':
-				read_triggerfile(optarg);
+				triggerfile = optarg;
 				break;
 			case 's':
 				cmd_file = optarg;
@@ -236,6 +257,10 @@ int main(int argc, char *argv[]) {
 				return 1;
 		}
 	}
+	/* load config file */
+	if (reload_triggerfile() != 0) {
+		return 1;
+	}
 	/* init keystate holder */
 	init_keystate_holder(&keystate);
 	/* install signal handler */
@@ -245,6 +270,7 @@ int main(int argc, char *argv[]) {
 	handler.sa_flags=0;
 	sigaction(SIGINT,&handler,0);
 	sigaction(SIGTERM,&handler,0);
+	sigaction(SIGHUP,&handler,0);
 
 	return start_readers(argc, argv, optind);
 }
