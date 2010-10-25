@@ -108,7 +108,7 @@ int read_triggerfile(const char *filename) {
 	return 0;
 }
 
-static int mods_satisfied( keystate_holder ksh, trigger_modifier tm ) {
+static int mods_equal( keystate_holder ksh, trigger_modifier tm ) {
 	int n = 0;
 	while ( n < TRIGGER_MODIFIERS_MAX ) {
 		int code = tm[n]; /* this key must be pressed */
@@ -118,6 +118,27 @@ static int mods_satisfied( keystate_holder ksh, trigger_modifier tm ) {
 			return 0;
 		}
 		n++;
+	}
+	/* any undesired keys pressed? */
+	for ( n=0; n <= KEY_MAX; n++ ) {
+		if ( ksh[n] > 0) {
+			/* if the key is pressed, it must also occur
+			 * in our modifier struct
+			 */
+			int x;
+			for ( x=0; x<TRIGGER_MODIFIERS_MAX; x++ ) {
+				int code = tm[x];
+				if ( code == n ) {
+					/* found it, continue */
+					goto KSH_LOOP_END;
+				}
+			}
+			/* we failed to find the pressed key in our
+			 * modifier struct, so we invalidate the request
+			 */
+			return 0;
+		}
+		KSH_LOOP_END : 1;
 	}
 	return 1;
 }
@@ -131,7 +152,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 		if ( type  == et->type &&
 		     code  == et->code &&
 		     value == et->value &&
-		     mods_satisfied(ksh, et->modifiers)) {
+		     mods_equal(ksh, et->modifiers)) {
 			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
 			int pid = fork();
 			if (pid == 0 ) {

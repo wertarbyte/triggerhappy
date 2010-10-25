@@ -85,12 +85,12 @@ int read_event( device *dev ) {
 		if (ev.type == EV_KEY && is_ignored( ev.code, ignored_keys)) {
 			return 0;
 		}
-		change_keystate( *keystate, ev );
 		if (dump_events) {
 			print_event( devname, ev );
 			print_keystate( *keystate );
 		}
 		run_triggers( ev.type, ev.code, ev.value, *keystate );
+		change_keystate( *keystate, ev );
 	}
 	return 0;
 }
