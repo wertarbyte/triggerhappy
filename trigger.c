@@ -119,28 +119,19 @@ static int mods_equal( keystate_holder ksh, trigger_modifier tm ) {
 		}
 		n++;
 	}
-	/* any undesired keys pressed? */
-	for ( n=0; n <= KEY_MAX; n++ ) {
-		if ( ksh[n] > 0) {
-			/* if the key is pressed, it must also occur
-			 * in our modifier struct
-			 */
-			int x;
-			for ( x=0; x<TRIGGER_MODIFIERS_MAX; x++ ) {
-				int code = tm[x];
-				if ( code == n ) {
-					/* found it, continue */
-					goto KSH_LOOP_END;
-				}
-			}
-			/* we failed to find the pressed key in our
-			 * modifier struct, so we invalidate the request
-			 */
-			return 0;
+	/* Now n is equal to the number of modifiers needed
+	 * we can check whether any additional keys are pressed
+	 * by counting the number of pressed keys instead of having
+	 * to cross-examine every key against the modifier list
+	 */
+	int x;
+	for (x=0; x<=KEY_MAX; x++) {
+		if (ksh[x] > 0) {
+			n--;
 		}
-		KSH_LOOP_END : 1;
 	}
-	return 1;
+	/* if n is zero, we have the exact number of needed modifiers pressed */
+	return (n == 0);
 }
 
 void run_triggers(int type, int code, int value, keystate_holder ksh) {
