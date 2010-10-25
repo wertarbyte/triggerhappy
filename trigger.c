@@ -141,7 +141,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 	}
 }
 
-int count_handlers( trigger **list ) {
+int count_triggers( trigger **list ) {
 	int n = 0;
 	trigger *p = *list;
 	while ( p != NULL ) {
@@ -151,3 +151,13 @@ int count_handlers( trigger **list ) {
 	return n;
 }
 
+void clear_triggers() {
+	trigger **p = &TRIGGER_LIST;
+	while ( *p != NULL ) {
+		trigger **n = &( (*p)->next );
+		free( (*p)->cmdline );
+		free( (*p) );
+		*p = NULL;
+		p = n;
+	}
+}

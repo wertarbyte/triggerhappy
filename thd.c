@@ -45,6 +45,11 @@ static char *pidfile = NULL;
 static keystate_holder *keystate = NULL;
 
 static int exiting = 0;
+static int reload_conf = 0;
+
+/* forward declarations */
+static int reload_triggerfile();
+
 
 /*
  * Look up event and key names and print them to STDOUT
@@ -136,8 +141,13 @@ static void process_events( device **list ) {
 		retval = select(maxfd+1, &rfds, NULL, NULL, &tv);
 		if (retval == -1 && errno != EINTR) {
 			perror("select()");
+			continue;
 		} else if (exiting) {
 			break;
+		} else if (reload_conf) {
+			reload_conf = 0;
+			reload_triggerfile();
+			continue;
 		} else if (retval) {
 			process_devices( &rfds, &devs );
 			if ( cmd_fd != -1 && FD_ISSET( cmd_fd, &rfds ) ) {
@@ -195,6 +205,7 @@ void cleanup(void) {
 }
 
 static int reload_triggerfile(void) {
+	clear_triggers();
 	if (triggerfile) {
 		int err = read_triggerfile(triggerfile);
 		if (err) {
@@ -212,8 +223,7 @@ static void handle_signal(int sig) {
 			exiting = 1;
 			break;
 		case SIGHUP:
-			fprintf(stderr, "Reloading config...\n");
-			reload_triggerfile();
+			reload_conf = 1;
 			break;
 	}
 }
