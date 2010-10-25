@@ -1,7 +1,9 @@
 enum command_type {
 	CMD_ADD,
 	CMD_REMOVE,
-	CMD_QUIT
+	CMD_QUIT,
+	CMD_DISABLE,
+	CMD_ENABLE
 };
 
 struct command {

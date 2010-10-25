@@ -6,7 +6,7 @@ th-cmd -- triggerhappy commander
 
 =head1 SYNOPSIS
 
-B<th-cmd> B<< <socket> >> quit|udev|[B<add>|B<remove> B<< <device> >>]
+B<th-cmd> B<< <socket> >> enable|disable|quit|udev|[B<add>|B<remove> B<< <device> >>]
 
 =head1 DESCRIPTION
 
@@ -31,6 +31,14 @@ Remove input device from the running daemon.
 =item B<udev>
 
 Deduce operation and device name from udev environment (for use in udev rules).
+
+=item B<disable>
+
+Disable the execution of triggers.
+
+=item B<enable>
+
+Re-enable the execution of triggers.
 
 =item B<quit>
 

@@ -22,6 +22,10 @@ int main(int argc, char *argv[]) {
 		}
 	} else if (argc == 3 && (strcasecmp( "quit", argv[2] ) == 0) ) {
 		op = "quit";
+	} else if (argc == 3 && (strcasecmp( "enable", argv[2] ) == 0) ) {
+		op = "enable";
+	} else if (argc == 3 && (strcasecmp( "disable", argv[2] ) == 0) ) {
+		op = "disable";
 	} else if (argc == 4) {
 		op = argv[2];
 		dev = argv[4];
@@ -30,6 +34,9 @@ int main(int argc, char *argv[]) {
 		fprintf( stderr, "  th-cmd <socket> udev\n");
 		fprintf( stderr, "  th-cmd <socket> add <device>\n");
 		fprintf( stderr, "  th-cmd <socket> remove <device>\n");
+		fprintf( stderr, "  th-cmd <socket> disable\n");
+		fprintf( stderr, "  th-cmd <socket> enable\n");
+		fprintf( stderr, "  th-cmd <socket> quit\n");
 		return 1;
 	}
 
@@ -43,8 +50,12 @@ int main(int argc, char *argv[]) {
 		err = send_command( s, CMD_ADD, dev );
 	} else if ( strcasecmp( "remove", op ) == 0 ) {
 		err = send_command( s, CMD_REMOVE, dev );
+	} else if ( strcasecmp( "enable", op ) == 0 ) {
+		err = send_command( s, CMD_ENABLE, NULL );
+	} else if ( strcasecmp( "disable", op ) == 0 ) {
+		err = send_command( s, CMD_DISABLE, NULL );
 	} else if ( strcasecmp( "quit", op ) == 0 ) {
-		err = send_command( s, CMD_QUIT, dev );
+		err = send_command( s, CMD_QUIT, NULL );
 	} else {
 		fprintf( stderr, "Unknown command: %s\n", op);
 	}

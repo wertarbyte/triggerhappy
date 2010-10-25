@@ -17,4 +17,6 @@ int read_triggerfile(const char *filename);
 void run_triggers(int type, int code, int value, keystate_holder ksh);
 void clear_triggers();
 
+void triggers_enabled( int status );
+
 extern trigger *TRIGGER_LIST;

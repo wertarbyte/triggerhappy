@@ -7,6 +7,12 @@
 
 trigger *TRIGGER_LIST = NULL;
 
+static int triggers_are_enabled = 1;
+
+void triggers_enabled( int status ) {
+	triggers_are_enabled = status;
+}
+
 static int strint(const char *str) {
 	if (str == NULL) {
 		return -1;
@@ -117,6 +123,9 @@ static int mods_satisfied( keystate_holder ksh, trigger_modifier tm ) {
 }
 
 void run_triggers(int type, int code, int value, keystate_holder ksh) {
+	if (triggers_are_enabled == 0) {
+		return;
+	}
 	trigger *et = TRIGGER_LIST;
 	while (et != NULL) {
 		if ( type  == et->type &&
