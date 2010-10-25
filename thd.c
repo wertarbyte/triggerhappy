@@ -29,6 +29,7 @@
 #include "command.h"
 #include "cmdsocket.h"
 #include "obey.h"
+#include "ignore.h"
 
 /* list of all devices with their FDs */
 static device *devs = NULL;
@@ -43,6 +44,8 @@ static char *triggerfile = NULL;
 static char *pidfile = NULL;
 
 static keystate_holder *keystate = NULL;
+
+static ignore *ignored_keys = NULL;
 
 static int exiting = 0;
 static int reload_conf = 0;
@@ -79,6 +82,9 @@ int read_event( device *dev ) {
 	}
 	/* ignore all events except KEY and SW */
 	if (ev.type == EV_KEY || ev.type == EV_SW) {
+		if (ev.type == EV_KEY && is_ignored( ev.code, ignored_keys)) {
+			return 0;
+		}
 		change_keystate( *keystate, ev );
 		if (dump_events) {
 			print_event( devname, ev );
@@ -175,6 +181,7 @@ static struct option long_options[] = {
 	{"pidfile",	required_argument, 0, 'p'},
 	{"triggers",	required_argument, 0, 't'},
 	{"socket",	required_argument, 0, 's'},
+	{"ignore",	required_argument, 0, 'i'},
 	{"help",	no_argument, 0, 'h'},
 	{0,0,0,0} /* end of list */
 };
@@ -189,6 +196,7 @@ void show_help(void) {
 	printf( "  --dump             Dump events to console\n");
 	printf( "  --triggers <file>  Load trigger definitions from <file>\n");
 	printf( "  --socket <socket>  Read commands from socket\n");
+	printf( "  --ignore <event>   Ignore key events with name <event>\n");
 }
 
 void cleanup(void) {
@@ -233,7 +241,7 @@ int main(int argc, char *argv[]) {
 	int option_index = 0;
 	int c;
 	while (1) {
-		c = getopt_long (argc, argv, "t:s:dhp", long_options, &option_index);
+		c = getopt_long (argc, argv, "t:s:dhpi:", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
@@ -258,6 +266,11 @@ int main(int argc, char *argv[]) {
 				break;
 			case 's':
 				cmd_file = optarg;
+				break;
+			case 'i':
+				if ( lookup_event_type(optarg) == EV_KEY ) {
+					ignore_key( lookup_event_code(optarg), &ignored_keys );
+				}
 				break;
 			case 'h':
 				show_help();

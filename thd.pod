@@ -6,7 +6,7 @@ thd -- triggerhappy global hotkey daemon
 
 =head1 SYNOPSIS
 
-B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--trigger> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [I<devices...>]
+B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--trigger> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [B<--ignore> I<event>] [I<devices...>]
 
 =head1 DESCRIPTION
 
@@ -42,6 +42,10 @@ Run as a background daemon and detach from the terminal.
 =item B<--pidfile> F<file>
 
 Write PID to F<file>.
+
+=item B<--ignore> I<eventname>
+
+Ignore key and switch event labeled  I<eventname>. This can be used to suppress the FN key on some notebooks which only generates events sometimes and might screw up key combinations.
 
 =back
 
