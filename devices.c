@@ -9,8 +9,12 @@
 #include <linux/input.h>
 #include <linux/hiddev.h>
 #include <sys/ioctl.h>
+#include <inttypes.h>
 
 #include "devices.h"
+#include "eventnames.h"
+
+#define BITFIELD uint32_t
 
 static char *get_device_description(int fd) {
 	char descr[256] = "Unknown";
@@ -20,6 +24,22 @@ static char *get_device_description(int fd) {
 	return strdup(descr);
 }
 
+static __inline__ int test_bit(int nr, BITFIELD * addr) {
+	BITFIELD mask;
+
+	addr += nr >> 5;
+	mask = 1 << (nr & 0x1f);
+	return ((mask & *addr) != 0);
+}
+
+int device_is_suitable(int fd) {
+	BITFIELD bits[32];
+	int rc = ioctl(fd, EVIOCGBIT(0,sizeof(bits)), bits);
+	return rc > 0 && (
+		/* we only consider devices with keys or switches suitable */
+		test_bit(EV_KEY, bits) || test_bit(EV_SW, bits)
+	);
+}
 
 void add_device(char *dev, device **list) {
 	device **p = list;
@@ -29,6 +49,11 @@ void add_device(char *dev, device **list) {
 	}
 	int fd = open( dev, O_RDONLY );
 	if (fd >= 0) {
+		if (! device_is_suitable(fd) ) {
+			fprintf(stderr, "Device %s not suitable.\n", dev);
+			close(fd);
+			return;
+		}
 		*p = malloc(sizeof(**list));
 		(*p)->devname = strdup(dev);
 		(*p)->descr = get_device_description(fd);
