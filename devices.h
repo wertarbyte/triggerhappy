@@ -1,6 +1,7 @@
 typedef struct device {
 	int fd;
 	char* devname;
+	char* descr;
 	struct device *next;
 } device;
 

@@ -6,8 +6,20 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
+#include <linux/input.h>
+#include <linux/hiddev.h>
+#include <sys/ioctl.h>
 
 #include "devices.h"
+
+static char *get_device_description(int fd) {
+	char descr[256] = "Unknown";
+	if(ioctl(fd, EVIOCGNAME(sizeof(descr)), descr) < 0) {
+		perror("evdev ioctl");
+	}
+	return strdup(descr);
+}
+
 
 void add_device(char *dev, device **list) {
 	device **p = list;
@@ -19,6 +31,7 @@ void add_device(char *dev, device **list) {
 	if (fd >= 0) {
 		*p = malloc(sizeof(**list));
 		(*p)->devname = strdup(dev);
+		(*p)->descr = get_device_description(fd);
 		(*p)->fd = fd;
 		(*p)->next = NULL;
 	} else {
@@ -35,6 +48,7 @@ int remove_device(char *dev, device **list) {
 			*p = copy->next;
 			close(copy->fd);
 			free(copy->devname);
+			free(copy->descr);
 			free(copy);
 			return 1;
 		}
@@ -49,8 +63,8 @@ void clear_devices(device **list) {
 	device *p = *list;
 	while (p != NULL) {
 		device *next = p->next;
-		fprintf(stderr, "Removing %s\n", p->devname);
 		close(p->fd);
+		free(p->descr);
 		free(p->devname);
 		free(p);
 		p = next;
