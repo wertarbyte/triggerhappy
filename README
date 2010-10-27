@@ -15,8 +15,9 @@ Dump all events received through two device files:
 
 	thd --dump /dev/input/event0 /dev/input/event1
 
-Event handlers can be defined in a configuration file (specified by --triggers)
-of the following format:
+Event handlers can be defined in configuration files (specified by --triggers).
+If a directory is specified, all configuration files within matching the
+pattern *.conf are loaded. The files use the following format:
 
 <event name>	<event value>	<command line>
 
@@ -37,7 +38,7 @@ KEY_VOLUMEUP+KEY_LEFTSHIFT	1	/usr/bin/amixer set Master 15%+
 
 Devices can be added dynamically by specifying a command socket:
 
-thd --socket /var/run/triggerhappy.socket --triggers /etc/triggerhappy.conf
+thd --socket /var/run/triggerhappy.socket --triggers /etc/triggerhappy.d/
 
 The program th-cmd is used to add new devices to the daemon:
 
@@ -47,3 +48,5 @@ th-cmd /var/run/triggerhappy.socket remove /dev/input/event3
 An example udev script is also included to facilitate this hotplug
 support - for this use, th-cmd can handle the parameter "udev" to
 deduce the device name and action from the udev environment.
+
+For more information, consult the manual pages of "thd" and "th-cmd".

@@ -25,7 +25,7 @@ Shows usage instructions
 
 =item B<--triggers> F<conf>
 
-Read trigger definitions from F<conf>, which can either be a file or a directory. If a directory is specified, all its files are loaded.
+Read trigger definitions from F<conf>, which can either be a file or a directory. If a directory is specified, all its files matching the pattern *.conf are loaded.
 
 =item B<--dump>
 
