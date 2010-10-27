@@ -116,7 +116,7 @@ static int accept_triggerfile(const struct dirent *entry) {
 	const char *suffix = ".conf";
 	const char *name = entry->d_name;
 	char *end = strstr( name, suffix );
-	if ( end && end[ strlen(suffix)+1 ] == '\0' ) {
+	if ( end && end[ strlen(suffix) ] == '\0' ) {
 		return 1;
 	} else {
 		return 0;
