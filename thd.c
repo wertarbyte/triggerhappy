@@ -215,7 +215,7 @@ void cleanup(void) {
 static int reload_triggerfile(void) {
 	clear_triggers();
 	if (triggerfile) {
-		int err = read_triggerfile(triggerfile);
+		int err = read_triggers(triggerfile);
 		if (err) {
 			fprintf(stderr, "Error loading triggerfile '%s'\n", triggerfile);
 			return 1;

@@ -6,7 +6,7 @@ thd -- triggerhappy global hotkey daemon
 
 =head1 SYNOPSIS
 
-B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--trigger> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [B<--ignore> I<event>] [I<devices...>]
+B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--triggers> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [B<--ignore> I<event>] [I<devices...>]
 
 =head1 DESCRIPTION
 
@@ -25,7 +25,7 @@ Shows usage instructions
 
 =item B<--triggers> F<conf>
 
-Read trigger definitions from F<file>
+Read trigger definitions from F<conf>, which can either be a file or a directory. If a directory is specified, all its files are loaded.
 
 =item B<--dump>
 
@@ -75,9 +75,9 @@ B<thd --dump /dev/input/event*>
 
 Dump all events processable by thd to the console; this is useful to find out the correct event name for a specific key.
 
-B<thd --triggers /etc/triggerhappy/triggers.conf /dev/input/event*>
+B<thd --triggers /etc/triggerhappy/triggers.d/ /dev/input/event*>
 
-Read from all currently connected input devices and process events according to the file F</etc/triggerhappy/triggers.conf>.
+Read from all currently connected input devices and process events according to the files in F</etc/triggerhappy/triggers.d/>.
 
 B<thd --triggers /etc/triggerhappy/triggers.conf --socket /var/run/thd.socket>
 
@@ -87,12 +87,13 @@ Do not open any input devices yet, but bind the socket F</var/run/thd.socket> fo
 
 Any number of event handlers can be placed in the configuration file:
 
-    # /etc/triggerhappy/triggers.conf
+    # /etc/triggerhappy/triggers.d/suspend.conf
     #
     # Suspend the system
     KEY_SLEEP                   1       /usr/sbin/hibernate-ram
     KEY_SLEEP+KEY_LEFTSHIFT     1       /usr/sbin/hibernate-disk
-    
+
+    # /etc/triggerhappy/triggers.d/audio.conf
     # Change mixer volume when pressing the appropiate keys (or holding them)
     KEY_VOLUMEUP    1      /usr/bin/amixer set Master 5%+
     KEY_VOLUMEUP    2      /usr/bin/amixer set Master 5%+

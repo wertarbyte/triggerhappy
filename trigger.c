@@ -1,6 +1,10 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #include "eventnames.h"
 #include "keystate.h"
 #include "trigger.h"
@@ -85,7 +89,7 @@ void append_trigger(trigger *t) {
 	*p = t;
 }
 
-int read_triggerfile(const char *filename) {
+static int read_triggerfile(const char *filename) {
 	trigger **p = &TRIGGER_LIST;
         FILE *conf;
         int len = 0;
@@ -107,6 +111,46 @@ int read_triggerfile(const char *filename) {
 	free(line);
 	return 0;
 }
+
+int read_triggers(const char *path) {
+	/* check whether filename is a directory */
+	struct stat sb;
+	if (stat(path, &sb) == -1) {
+		perror("stat");
+		return 1;
+	}
+	if (S_ISDIR(sb.st_mode)) {
+		/* dive into it */
+		struct dirent **namelist;
+		int n;
+		n = scandir(path, &namelist, 0, alphasort);
+		if ( n < 0) {
+			perror("scandir");
+		} else {
+			while (n--) {
+				struct stat sf;
+				char *file = namelist[n]->d_name;
+				char *sep = "/";
+				char fpath[strlen(path)+strlen(sep)+strlen(file) + 1];
+				strcpy(fpath, path);
+				strcat(fpath, sep);
+				strcat(fpath, file);
+				if (stat(fpath, &sf) == -1) {
+					perror("stat");
+				}
+				if (S_ISREG(sf.st_mode)) {
+					read_triggerfile(fpath);
+				}
+				free(namelist[n]);
+			}
+			free(namelist);
+			return 0;
+		}
+	} else {
+		read_triggerfile( path );
+	}
+}
+
 
 static int mods_equal( keystate_holder ksh, trigger_modifier tm ) {
 	int n = 0;
