@@ -112,6 +112,17 @@ static int read_triggerfile(const char *filename) {
 	return 0;
 }
 
+static int accept_triggerfile(const struct dirent *entry) {
+	const char *suffix = ".conf";
+	const char *name = entry->d_name;
+	char *end = strstr( name, suffix );
+	if ( end && end[ strlen(suffix)+1 ] == '\0' ) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 int read_triggers(const char *path) {
 	/* check whether filename is a directory */
 	struct stat sb;
@@ -123,7 +134,7 @@ int read_triggers(const char *path) {
 		/* dive into it */
 		struct dirent **namelist;
 		int n;
-		n = scandir(path, &namelist, 0, alphasort);
+		n = scandir(path, &namelist, accept_triggerfile, alphasort);
 		if ( n < 0) {
 			perror("scandir");
 		} else {
