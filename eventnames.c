@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <linux/input.h>
 #include "eventnames.h"
 #include "eventtable.h"
