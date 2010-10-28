@@ -1,3 +1,10 @@
+triggerhappy (0.1.2-1) unstable; urgency=low
+
+  * autogenerate event mapping table
+  * add --listevents to list known event names
+
+ -- Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>  Thu, 28 Oct 2010 15:04:30 +0200
+
 triggerhappy (0.1.1-1) unstable; urgency=low
 
   * fix off-by-one error in conf file filtering routine
