@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 		op = "disable";
 	} else if (argc == 4) {
 		op = argv[2];
-		dev = argv[4];
+		dev = argv[3];
 	} else {
 		fprintf( stderr, "Use:\n");
 		fprintf( stderr, "  th-cmd <socket> udev\n");
