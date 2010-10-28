@@ -4,3 +4,4 @@ th-cmd
 th-cmd.1
 *.o
 *.d
+evtable_*.h
