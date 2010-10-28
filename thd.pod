@@ -6,7 +6,7 @@ thd -- triggerhappy global hotkey daemon
 
 =head1 SYNOPSIS
 
-B<thd> [B<--help>] [B<--dump>] [B<--socket> I<socket>] [B<--triggers> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [B<--ignore> I<event>] [I<devices...>]
+B<thd> [B<--help>] [B<--listevents>] [B<--dump>] [B<--socket> I<socket>] [B<--triggers> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [B<--ignore> I<event>] [I<devices...>]
 
 =head1 DESCRIPTION
 
@@ -22,6 +22,10 @@ like volume or wifi control; it works independently from a specific user being l
 =item B<--help>
 
 Shows usage instructions
+
+=item B<--listevents>
+
+Prints a list of all known event names.
 
 =item B<--triggers> F<conf>
 

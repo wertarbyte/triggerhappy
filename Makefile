@@ -6,7 +6,7 @@ MANDIR:=$(DESTDIR)/$(PREFIX)/share/man/man1/
 THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore
 THCMD_COMPS := th-cmd cmdsocket
 
-MAKEDEPEND = gcc -M $(CPPFLAGS) -o $*.d $<
+MAKEDEPEND = gcc -M -MG $(CPPFLAGS) -o $*.d $<
 
 all: thd th-cmd man
 
@@ -23,10 +23,13 @@ th-cmd: $(THCMD_COMPS:%=%.o)
 		--release="" \
 		$< > $@
 
+evtable_%.h: /usr/include/linux/input.h
+	awk '/^#define $*_/ && $$2 !~ /_(MAX|CNT|VERSION)$$/ {print "EV_MAP("$$2"),"}' $< > $@
 
 clean:
 	rm -f *.d
 	rm -f *.o
+	rm -f evtable_*.h
 	rm -f thd th-cmd
 	rm -f thd.1 th-cmd.1
 
