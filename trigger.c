@@ -204,7 +204,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 			if (pid == 0 ) {
 				/* adjust environment */
 				setenv( "TH_KEYSTATE", get_keystate(ksh), 1 );
-				char *en = lookup_event_name_i( et->type, et->code );
+				const char *en = lookup_event_name_i( et->type, et->code );
 				setenv( "TH_EVENT", en, 1 );
 				char ev[8];
 				sprintf( &(ev[0]), "%d", et->value );

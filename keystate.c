@@ -58,7 +58,7 @@ char *get_keystate(keystate_holder ksh) {
 			if (n>0) {
 				strncat( buf, KS, bsize-1-strlen(KS) );
 			}
-			char *name = lookup_event_name_i(EV_KEY, i);
+			const char *name = lookup_event_name_i(EV_KEY, i);
 			strncat( &(buf[0]), name, bsize-1-strlen(buf) );
 			n++;
 		}

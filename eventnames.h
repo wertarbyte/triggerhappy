@@ -1,10 +1,10 @@
 #include <linux/input.h>
 
-char* lookup_event_name_i(int evtype, int evcode);
-char* lookup_event_name(struct input_event ev);
+const char *lookup_event_name_i(const int evtype, const int evcode);
+const char *lookup_event_name(const struct input_event ev);
 
-char* lookup_type_name_i(int evtype);
-char* lookup_type_name(struct input_event ev);
+const char *lookup_type_name_i(const int evtype);
+const char *lookup_type_name(const struct input_event ev);
 
-int lookup_event_code(char* eventname);
-int lookup_event_type(char* eventname);
+const int lookup_event_code(const char *eventname);
+const int lookup_event_type(const char *eventname);

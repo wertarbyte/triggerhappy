@@ -58,8 +58,8 @@ static int reload_triggerfile();
  * Look up event and key names and print them to STDOUT
  */
 void print_event(char* dev, struct input_event ev) {
-	char *typename = lookup_type_name( ev );
-	char *evname = lookup_event_name( ev );
+	const char *typename = lookup_type_name( ev );
+	const char *evname = lookup_event_name( ev );
 	if ( evname != NULL ) {
 		printf( "%s\t%s\t%d\t%s\n", typename, evname, ev.value, dev );
 	} else {

@@ -3,7 +3,7 @@
 #include "eventnames.h"
 #include "eventtable.h"
 
-char* lookup_event_name_i(int evtype, int evcode) {
+const char *lookup_event_name_i( const int evtype, const int evcode ) {
 	if (evtype == EV_KEY) {
 		return (KEY_MAX >= evcode ? KEY_NAME[ evcode ] : NULL);
 	}
@@ -13,19 +13,19 @@ char* lookup_event_name_i(int evtype, int evcode) {
 	return NULL;
 }
 
-char* lookup_event_name(struct input_event ev) {
+const char *lookup_event_name( const struct input_event ev ) {
 	return lookup_event_name_i( ev.type, ev.code );
 }
 
-char* lookup_type_name_i(int evtype) {
+const char *lookup_type_name_i( const int evtype ) {
 	return (EV_MAX >= evtype ? EV_NAME[ evtype ] : NULL);
 }
 
-char* lookup_type_name(struct input_event ev) {
+const char *lookup_type_name( const struct input_event ev ) {
 	return lookup_type_name_i( ev.type );
 }
 
-int lookup_event_code(char* eventname) {
+const int lookup_event_code( const char *eventname ) {
 	int i = 0;
 	while (i < KEY_MAX) {
 		if (KEY_NAME[i] != NULL &&
@@ -45,7 +45,7 @@ int lookup_event_code(char* eventname) {
 	return -1;
 }
 
-int lookup_event_type( char* eventname ) {
+const int lookup_event_type( const char *eventname ) {
 	int i = 0;
 	while (i<KEY_MAX) {
 		if (KEY_NAME[i] != NULL &&
