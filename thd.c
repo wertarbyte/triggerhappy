@@ -183,6 +183,7 @@ static struct option long_options[] = {
 	{"socket",	required_argument, 0, 's'},
 	{"ignore",	required_argument, 0, 'i'},
 	{"help",	no_argument, 0, 'h'},
+	{"listevents",	no_argument, 0, 'l'},
 	{0,0,0,0} /* end of list */
 };
 
@@ -192,11 +193,28 @@ void show_help(void) {
 	printf( "  thd [switches] [devices]\n\n" );
 	printf( "Command line switches:\n" );
 	printf( "  --help             Display this help message\n" );
-	printf( "  --daemon           Run as daemon process\n");
-	printf( "  --dump             Dump events to console\n");
-	printf( "  --triggers <file>  Load trigger definitions from <file>\n");
-	printf( "  --socket <socket>  Read commands from socket\n");
-	printf( "  --ignore <event>   Ignore key events with name <event>\n");
+	printf( "  --daemon           Run as daemon process\n" );
+	printf( "  --dump             Dump events to console\n" );
+	printf( "  --listevents       Print a list of all known events\n" );
+	printf( "  --triggers <file>  Load trigger definitions from <file>\n" );
+	printf( "  --socket <socket>  Read commands from socket\n" );
+	printf( "  --ignore <event>   Ignore key events with name <event>\n" );
+}
+
+static void list_events(void) {
+	int n = 0;
+	for (n = 0; n < KEY_MAX; n++) {
+		const char *name = lookup_event_name_i( EV_KEY, n );
+		if (name) {
+			printf( "%s\n", name );
+		}
+	}
+	for (n = 0; n < SW_MAX; n++) {
+		const char *name = lookup_event_name_i( EV_SW, n );
+		if (name) {
+			printf( "%s\n", name );
+		}
+	}
 }
 
 void cleanup(void) {
@@ -274,6 +292,9 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'h':
 				show_help();
+				return 0;
+			case 'l':
+				list_events();
 				return 0;
 			case '?':
 			default:
