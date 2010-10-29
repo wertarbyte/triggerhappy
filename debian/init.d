@@ -12,18 +12,20 @@
 
 # PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC=triggerhappy             # Introduce a short description here
+DESC="input event daemon"     # Introduce a short description here
 NAME=thd                      # Introduce the short server's name here
+PNAME=triggerhappy            # Package name
 DAEMON=/usr/sbin/thd          # Introduce the server's location here
 PIDFILE=/var/run/$NAME.pid
 DAEMON_ARGS="--daemon --triggers /etc/triggerhappy/triggers.d/ --socket /var/run/thd.socket --pidfile $PIDFILE /dev/input/event*"     # Arguments to run the daemon with
-SCRIPTNAME=/etc/init.d/triggerhappy
+DAEMON_OPTS=""
+SCRIPTNAME=/etc/init.d/$PNAME
 
 # Exit if the package is not installed
 [ -x $DAEMON ] || exit 0
 
 # Read configuration variable file if it is present
-[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+[ -r /etc/default/$PNAME ] && . /etc/default/$PNAME
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -44,7 +46,7 @@ do_start()
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
 		|| return 1
 	start-stop-daemon --start --quiet --pidfile $PIDFILE --exec $DAEMON -- \
-		$DAEMON_ARGS \
+		$DAEMON_ARGS $DAEMON_OPTS \
 		|| return 2
 }
 

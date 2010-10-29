@@ -7,4 +7,6 @@
 #
 
 # Additional options that are passed to the Daemon.
+# e.g. to drop root privileges after startup:
+# DAEMON_OPTS="--user nobody"
 DAEMON_OPTS=""
