@@ -40,12 +40,21 @@ int connect_cmdsocket( char *name ) {
 }
 
 struct command *read_command( int cmd_fd ) {
+	struct msghdr msg = {0};
 	struct command *cmd = malloc(sizeof(struct command));
-	int done = read( cmd_fd, cmd, sizeof(struct command) );
-	if (done != sizeof(struct command)) {
-		fprintf(stderr, "Error reading command\n");
+	struct iovec v;
+	v.iov_base = cmd;
+	v.iov_len = sizeof(*cmd);
+	msg.msg_iov = &v;
+	msg.msg_iovlen = 1;
+
+	int done = recvmsg( cmd_fd, &msg, 0 );
+	if (done == -1) {
+		fprintf(stderr, "Error reading command.");
+		free(cmd);
 		return NULL;
 	}
+
 	return cmd;
 }
 
@@ -57,6 +66,15 @@ int send_command( int cmd_fd, enum command_type type, char *param ) {
 	} else {
 		cmd.param[0] = '\0';
 	}
-	int done = write( cmd_fd, &cmd, sizeof(struct command) );
-	return (done != sizeof(struct command));
+
+	struct msghdr m = {0};
+	struct iovec v;
+	memset(&m, 0, sizeof(m));
+	v.iov_base = &cmd;
+	v.iov_len = sizeof(cmd);
+	m.msg_iov = &v;
+	m.msg_iovlen = 1;
+
+	int done = sendmsg( cmd_fd, &m, 0 );
+	return (done != -1);
 }
