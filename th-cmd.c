@@ -13,10 +13,18 @@
 int main(int argc, char *argv[]) {
 	char *op = NULL;
 	char *dev = NULL;
-	if (argc == 3 && (strcasecmp( "udev", argv[2] ) == 0) ) {
+	int passfd = 0;
+
+	if (argc == 3 &&
+		(
+			(strcasecmp( "udev", argv[2] ) == 0) ||
+			(strcasecmp( "udev-fd", argv[2] ) == 0)
+		)
+	) {
 		/* gather params from udev environment */
 		op = getenv("ACTION");
 		dev = getenv("DEVNAME");
+		passfd = (strcasecmp( "udev-fd", argv[2] ) == 0);
 		if (op == NULL || dev == NULL) {
 			return 1;
 		}
@@ -47,21 +55,22 @@ int main(int argc, char *argv[]) {
 	}
 	int err;
 	if ( strcasecmp( "add", op ) == 0 ) {
-		err = send_command( s, CMD_ADD, dev );
+		err = send_command( s, CMD_ADD, dev, passfd );
+	} else if ( strcasecmp( "add-fd", op ) == 0 ) {
+		err = send_command( s, CMD_ADD, dev, 1 );
 	} else if ( strcasecmp( "remove", op ) == 0 ) {
-		err = send_command( s, CMD_REMOVE, dev );
+		err = send_command( s, CMD_REMOVE, dev, 0 );
 	} else if ( strcasecmp( "enable", op ) == 0 ) {
-		err = send_command( s, CMD_ENABLE, NULL );
+		err = send_command( s, CMD_ENABLE, NULL, 0 );
 	} else if ( strcasecmp( "disable", op ) == 0 ) {
-		err = send_command( s, CMD_DISABLE, NULL );
+		err = send_command( s, CMD_DISABLE, NULL, 0 );
 	} else if ( strcasecmp( "quit", op ) == 0 ) {
-		err = send_command( s, CMD_QUIT, NULL );
+		err = send_command( s, CMD_QUIT, NULL, 0 );
 	} else {
 		fprintf( stderr, "Unknown command: %s\n", op);
 	}
 	if (err) {
-		//fprintf( stderr, "Error sending command\n");
-		perror("send_command()");
+		fprintf( stderr, "Error sending command\n");
 	}
 	close(s);
 

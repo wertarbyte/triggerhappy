@@ -1,2 +1,2 @@
-# call the triggerhappy script if a new device is plugged in
-ACTION=="add", SUBSYSTEM=="input", RUN+="/usr/sbin/th-cmd /var/run/thd.socket udev"
+# open new input devices and pass the file descriptor to the triggerhappy daemon
+ACTION=="add", SUBSYSTEM=="input", RUN+="/usr/sbin/th-cmd /var/run/thd.socket udev-fd"

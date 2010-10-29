@@ -6,6 +6,7 @@
 #include <sys/un.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 
 #include "devices.h"
 #include "command.h"
@@ -42,24 +43,40 @@ int connect_cmdsocket( char *name ) {
 struct command *read_command( int cmd_fd ) {
 	struct msghdr msg = {0};
 	struct command *cmd = malloc(sizeof(struct command));
+
+	int fd[1] = {-1};
+	char buffer[CMSG_SPACE(sizeof fd)];
+
 	struct iovec v;
 	v.iov_base = cmd;
 	v.iov_len = sizeof(*cmd);
 	msg.msg_iov = &v;
 	msg.msg_iovlen = 1;
+	msg.msg_control = buffer;
+	msg.msg_controllen = sizeof(buffer);
 
 	int done = recvmsg( cmd_fd, &msg, 0 );
+
 	if (done == -1) {
 		fprintf(stderr, "Error reading command.");
 		free(cmd);
 		return NULL;
 	}
-
+	struct cmsghdr *cmessage = CMSG_FIRSTHDR(&msg);
+	if (cmessage) {
+		memcpy(fd, CMSG_DATA(cmessage), sizeof fd);
+		/* place FD back in the command message */
+		cmd->fd = (int) fd[0];
+	}
 	return cmd;
 }
 
-int send_command( int cmd_fd, enum command_type type, char *param ) {
+int send_command( int cmd_fd, enum command_type type, char *param, int passfd ) {
 	struct command cmd;
+	cmd.fd = -1;
+	if (type == CMD_ADD && passfd == 1) {
+		type = CMD_PASSFD;
+	}
 	cmd.type = type;
 	if (param != NULL) {
 		strcpy(cmd.param, param);
@@ -69,12 +86,31 @@ int send_command( int cmd_fd, enum command_type type, char *param ) {
 
 	struct msghdr m = {0};
 	struct iovec v;
-	memset(&m, 0, sizeof(m));
 	v.iov_base = &cmd;
 	v.iov_len = sizeof(cmd);
 	m.msg_iov = &v;
 	m.msg_iovlen = 1;
 
+	/* add FD */
+	if (passfd) {
+		int fd = open( param, O_RDONLY );
+		if (fd < 0) {
+			perror("open");
+			return 1;
+		}
+		int dev_fd[1] = { fd };
+		char buffer[CMSG_SPACE(sizeof(dev_fd))];
+		m.msg_control = buffer;
+		m.msg_controllen = sizeof(buffer);
+
+		struct cmsghdr *cmessage = CMSG_FIRSTHDR(&m);
+		cmessage->cmsg_level = SOL_SOCKET;
+		cmessage->cmsg_type = SCM_RIGHTS;
+		cmessage->cmsg_len = CMSG_LEN(sizeof(dev_fd));
+
+		m.msg_controllen = cmessage->cmsg_len;
+		memcpy(CMSG_DATA(cmessage), dev_fd, sizeof dev_fd);
+	}
 	int done = sendmsg( cmd_fd, &m, 0 );
-	return (done != -1);
+	return (done == -1);
 }

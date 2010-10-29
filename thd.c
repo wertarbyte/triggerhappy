@@ -346,7 +346,7 @@ int start_readers(int argc, char *argv[], int start) {
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
-		add_device( dev, &devs );
+		add_device( dev, -1, &devs );
 	}
 	if (run_as_daemon) {
 		int err = daemon(0,0);

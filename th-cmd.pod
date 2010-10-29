@@ -6,7 +6,7 @@ th-cmd -- triggerhappy commander
 
 =head1 SYNOPSIS
 
-B<th-cmd> B<< <socket> >> enable|disable|quit|udev|[B<add>|B<remove> B<< <device> >>]
+B<th-cmd> B<< <socket> >> [command]
 
 =head1 DESCRIPTION
 
@@ -22,7 +22,7 @@ The socket file opened by the running triggerhappy daemon instance.
 
 =item B<add> B<< <device> >>
 
-Add input device to the running daemon.
+Instruct the running daemon to open the input device.
 
 =item B<remove> B<< <device> >>
 
@@ -43,6 +43,14 @@ Re-enable the execution of triggers.
 =item B<quit>
 
 Terminate the triggerhappy daemon.
+
+=item B<add-fd>
+
+Instead of instructing the daemon to open the device, open the device and apss the file descriptor to the daemon. This allows the adding of new devices to a daemon having dropped its privileges, however the th-cmd process must have access to the device file.
+
+=item B<udev-fd>
+
+Deduce the operation from the udev environment and use the method of fd passing described above.
 
 =back
 

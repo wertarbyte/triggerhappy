@@ -6,7 +6,11 @@
 
 int obey_command( struct command *cmd, device **list ) {
 	if (cmd->type == CMD_ADD) {
-		add_device( &(cmd->param[0]), list );
+		add_device( &(cmd->param[0]), -1, list );
+		return 0;
+	}
+	if (cmd->type == CMD_PASSFD) {
+		add_device( &(cmd->param[0]), cmd->fd, list );
 		return 0;
 	}
 	if (cmd->type == CMD_REMOVE) {
