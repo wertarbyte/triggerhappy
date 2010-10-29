@@ -6,7 +6,7 @@ th-cmd -- triggerhappy commander
 
 =head1 SYNOPSIS
 
-B<th-cmd> B<< <socket> >> enable|disable|quit|udev|[B<add>|B<remove> B<< <device> >>]
+B<th-cmd> --socket B<< <socket> >> [B<--passfd>] [B<--enable>|B<--disable>|B<--quit>|B<--udev>|B<--add> F<< <device> >>|B<--remove> F<< <device> >>]
 
 =head1 DESCRIPTION
 
@@ -16,33 +16,37 @@ THis program is used to issue commands to a running triggerhappy daemon. It util
 
 =over
 
-=item B<< <socket> >>
+=item B<--socket> F<socket>
 
 The socket file opened by the running triggerhappy daemon instance.
 
-=item B<add> B<< <device> >>
+=item B<--add> B<< <device> >>
 
-Add input device to the running daemon.
+Instruct the running daemon to open the input device.
 
-=item B<remove> B<< <device> >>
+=item B<--remove> B<< <device> >>
 
 Remove input device from the running daemon.
 
-=item B<udev>
+=item B<--udev>
 
 Deduce operation and device name from udev environment (for use in udev rules).
 
-=item B<disable>
+=item B<--disable>
 
 Disable the execution of triggers.
 
-=item B<enable>
+=item B<--enable>
 
 Re-enable the execution of triggers.
 
-=item B<quit>
+=item B<--quit>
 
 Terminate the triggerhappy daemon.
+
+=item B<--passfd>
+
+Instead of instructing the daemon to open the device, open the device and apss the file descriptor to the daemon. This allows the adding of new devices to a daemon having dropped its privileges, however the th-cmd process must have access to the device file.
 
 =back
 

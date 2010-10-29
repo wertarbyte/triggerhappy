@@ -5,63 +5,99 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <strings.h>
+#include <getopt.h>
 
 #include "devices.h"
 #include "command.h"
 #include "cmdsocket.h"
 
+void show_help(void) {
+	fprintf( stderr, "Use:\n");
+	fprintf( stderr, "  th-cmd --socket <socket> [--passfd] --udev\n");
+	fprintf( stderr, "  th-cmd --socket <socket> [--passfd] --add <device>\n");
+	fprintf( stderr, "  th-cmd --socket <socket> --remove <device>\n");
+	fprintf( stderr, "  th-cmd --socket <socket> --enable\n");
+	fprintf( stderr, "  th-cmd --socket <socket> --disable\n");
+	fprintf( stderr, "  th-cmd --socket <socket> --quit\n");
+	fprintf( stderr, "  th-cmd --socket <socket> --help\n");
+}
+
 int main(int argc, char *argv[]) {
-	char *op = NULL;
+	char *socket = NULL;
 	char *dev = NULL;
-	if (argc == 3 && (strcasecmp( "udev", argv[2] ) == 0) ) {
-		/* gather params from udev environment */
-		op = getenv("ACTION");
-		dev = getenv("DEVNAME");
-		if (op == NULL || dev == NULL) {
-			return 1;
+	static int passfd = 0;
+	enum command_type ctype = -1;
+
+	static struct option long_options[] = {
+		{ "socket", 1, 0, 's' },
+		{ "add", 1, 0, 'a' },
+		{ "remove", 1, 0, 'r' },
+		{ "udev", 0, 0, 'u' },
+		{ "passfd", 0, &passfd, 1 },
+		{ "enable", 0, 0, 'e' },
+		{ "disable", 0, 0, 'd' },
+		{ "quit", 0, 0, 'q' },
+		{ "help", 0, 0, 'h' },
+		{ 0, 0, 0, 0 }
+	};
+
+	int c;
+	while (1) {
+		int option_index = 0;
+		c = getopt_long(argc, argv, "s:a:r:u", long_options, &option_index);
+		if (c == -1) {
+			break;
 		}
-	} else if (argc == 3 && (strcasecmp( "quit", argv[2] ) == 0) ) {
-		op = "quit";
-	} else if (argc == 3 && (strcasecmp( "enable", argv[2] ) == 0) ) {
-		op = "enable";
-	} else if (argc == 3 && (strcasecmp( "disable", argv[2] ) == 0) ) {
-		op = "disable";
-	} else if (argc == 4) {
-		op = argv[2];
-		dev = argv[4];
-	} else {
-		fprintf( stderr, "Use:\n");
-		fprintf( stderr, "  th-cmd <socket> udev\n");
-		fprintf( stderr, "  th-cmd <socket> add <device>\n");
-		fprintf( stderr, "  th-cmd <socket> remove <device>\n");
-		fprintf( stderr, "  th-cmd <socket> disable\n");
-		fprintf( stderr, "  th-cmd <socket> enable\n");
-		fprintf( stderr, "  th-cmd <socket> quit\n");
+		switch(c) {
+			case 's':
+				socket = optarg;
+				break;
+			case 'a':
+				ctype = CMD_ADD;
+				dev = optarg;
+				break;
+			case 'r':
+				ctype = CMD_REMOVE;
+				dev = optarg;
+				break;
+			case 'u':
+				if (strcasecmp("add", getenv("ACTION")) == 0) {
+					ctype = CMD_ADD;
+				} else if (strcasecmp("remove", getenv("ACTION")) == 0) {
+					ctype = CMD_REMOVE;
+				}
+				dev = getenv("DEVNAME");
+				break;
+			case 'e':
+				ctype = CMD_ENABLE;
+				break;
+			case 'd':
+				ctype = CMD_DISABLE;
+				break;
+			case 'q':
+				ctype = CMD_QUIT;
+				break;
+			case 'h':
+			case '?':
+			case -1:
+				show_help();
+				return 1;
+		}
+	}
+	if (ctype == -1) {
+		show_help();
 		return 1;
 	}
 
-	int s = connect_cmdsocket( argv[1] );
+	int s = connect_cmdsocket( socket );
 	if (s < 0) {
 		perror("connect()");
 		return 1;
 	}
 	int err;
-	if ( strcasecmp( "add", op ) == 0 ) {
-		err = send_command( s, CMD_ADD, dev );
-	} else if ( strcasecmp( "remove", op ) == 0 ) {
-		err = send_command( s, CMD_REMOVE, dev );
-	} else if ( strcasecmp( "enable", op ) == 0 ) {
-		err = send_command( s, CMD_ENABLE, NULL );
-	} else if ( strcasecmp( "disable", op ) == 0 ) {
-		err = send_command( s, CMD_DISABLE, NULL );
-	} else if ( strcasecmp( "quit", op ) == 0 ) {
-		err = send_command( s, CMD_QUIT, NULL );
-	} else {
-		fprintf( stderr, "Unknown command: %s\n", op);
-	}
+	err = send_command( s, ctype, dev, passfd );
 	if (err) {
-		//fprintf( stderr, "Error sending command\n");
-		perror("send_command()");
+		fprintf( stderr, "Error sending command\n");
 	}
 	close(s);
 

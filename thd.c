@@ -20,6 +20,7 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <stddef.h>
+#include <pwd.h>
 
 #include "thd.h"
 #include "eventnames.h"
@@ -47,6 +48,8 @@ static keystate_holder *keystate = NULL;
 
 static ignore *ignored_keys = NULL;
 
+static char *user = NULL;
+
 static int exiting = 0;
 static int reload_conf = 0;
 
@@ -58,8 +61,8 @@ static int reload_triggerfile();
  * Look up event and key names and print them to STDOUT
  */
 void print_event(char* dev, struct input_event ev) {
-	char *typename = lookup_type_name( ev );
-	char *evname = lookup_event_name( ev );
+	const char *typename = lookup_type_name( ev );
+	const char *evname = lookup_event_name( ev );
 	if ( evname != NULL ) {
 		printf( "%s\t%s\t%d\t%s\n", typename, evname, ev.value, dev );
 	} else {
@@ -178,6 +181,7 @@ static int write_pidfile( char *pidfile ) {
 static struct option long_options[] = {
 	{"dump",	no_argument, &dump_events, 1},
 	{"daemon",	no_argument, &run_as_daemon, 1},
+	{"user",	required_argument, 0, 'u'},
 	{"pidfile",	required_argument, 0, 'p'},
 	{"triggers",	required_argument, 0, 't'},
 	{"socket",	required_argument, 0, 's'},
@@ -199,6 +203,7 @@ void show_help(void) {
 	printf( "  --triggers <file>  Load trigger definitions from <file>\n" );
 	printf( "  --socket <socket>  Read commands from socket\n" );
 	printf( "  --ignore <event>   Ignore key events with name <event>\n" );
+	printf( "  --user <name>      Drop privileges to <name> after opening devices\n" );
 }
 
 static void list_events(void) {
@@ -259,7 +264,7 @@ int main(int argc, char *argv[]) {
 	int option_index = 0;
 	int c;
 	while (1) {
-		c = getopt_long (argc, argv, "t:s:dhpi:", long_options, &option_index);
+		c = getopt_long (argc, argv, "t:s:dhpi:u:", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
@@ -296,6 +301,9 @@ int main(int argc, char *argv[]) {
 			case 'l':
 				list_events();
 				return 0;
+			case 'u':
+				user = optarg;
+				break;
 			case '?':
 			default:
 				return 1;
@@ -316,7 +324,9 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGTERM,&handler,0);
 	sigaction(SIGHUP,&handler,0);
 
-	return start_readers(argc, argv, optind);
+	int status = start_readers(argc, argv, optind);
+	cleanup();
+	return status;
 }
 
 int start_readers(int argc, char *argv[], int start) {
@@ -336,7 +346,7 @@ int start_readers(int argc, char *argv[], int start) {
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
-		add_device( dev, &devs );
+		add_device( dev, -1, &devs );
 	}
 	if (run_as_daemon) {
 		int err = daemon(0,0);
@@ -347,8 +357,21 @@ int start_readers(int argc, char *argv[], int start) {
 	if (pidfile) {
 		write_pidfile( pidfile );
 	}
+	/* drop privileges */
+	if (user) {
+		struct passwd *pw = getpwnam(user);
+		if (pw) {
+			if ( setuid( pw->pw_uid ) ) {
+				perror("setuid");
+				return 1;
+			}
+		} else {
+			fprintf(stderr, "Unknown username '%s'.\n", user);
+			return 1;
+		}
+	}
+
 	process_events( &devs );
 
-	cleanup();
 	return 0;
 }

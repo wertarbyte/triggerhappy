@@ -41,13 +41,15 @@ int device_is_suitable(int fd) {
 	);
 }
 
-void add_device(char *dev, device **list) {
+void add_device(char *dev, int fd, device **list) {
 	device **p = list;
 	// find end of list
 	while (*p != NULL) {
 		p = &( (*p)->next );
 	}
-	int fd = open( dev, O_RDONLY );
+	if (fd < 0) {
+		fd = open( dev, O_RDONLY );
+	}
 	if (fd >= 0) {
 		if (! device_is_suitable(fd) ) {
 			fprintf(stderr, "Device %s not suitable.\n", dev);

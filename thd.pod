@@ -6,7 +6,7 @@ thd -- triggerhappy global hotkey daemon
 
 =head1 SYNOPSIS
 
-B<thd> [B<--help>] [B<--listevents>] [B<--dump>] [B<--socket> I<socket>] [B<--triggers> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [B<--ignore> I<event>] [I<devices...>]
+B<thd> [B<--help>] [B<--user> I<name>] [B<--listevents>] [B<--dump>] [B<--socket> I<socket>] [B<--triggers> I<config>] [B<--daemon>] [B<--pidfile> I<file>] [B<--ignore> I<event>] [I<devices...>]
 
 =head1 DESCRIPTION
 
@@ -50,6 +50,10 @@ Write PID to F<file>.
 =item B<--ignore> I<eventname>
 
 Ignore key and switch event labeled  I<eventname>. This can be used to suppress the FN key on some notebooks which only generates events sometimes and might screw up key combinations.
+
+=item B<--user> I<name>
+
+Change to user id I<name> after opening files. This usually prevents thd from opening additional input devices, unless they are opened by the th-cmd program and their file descriptor are passed to the daemon.
 
 =back
 
