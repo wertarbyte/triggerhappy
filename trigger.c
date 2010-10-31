@@ -9,7 +9,7 @@
 #include "keystate.h"
 #include "trigger.h"
 
-trigger *TRIGGER_LIST = NULL;
+static trigger *trigger_list = NULL;
 
 static int triggers_are_enabled = 1;
 
@@ -82,7 +82,7 @@ trigger* parse_trigger(char* line) {
 }
 
 void append_trigger(trigger *t) {
-	trigger **p = &TRIGGER_LIST;
+	trigger **p = &trigger_list;
 	while (*p != NULL) {
 		p = &( (*p)->next );
 	}
@@ -90,7 +90,7 @@ void append_trigger(trigger *t) {
 }
 
 static int read_triggerfile(const char *filename) {
-	trigger **p = &TRIGGER_LIST;
+	trigger **p = &trigger_list;
         FILE *conf;
         int len = 0;
         char *line = NULL;
@@ -193,7 +193,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 	if (triggers_are_enabled == 0) {
 		return;
 	}
-	trigger *et = TRIGGER_LIST;
+	trigger *et = trigger_list;
 	while (et != NULL) {
 		if ( type  == et->type &&
 		     code  == et->code &&
@@ -228,7 +228,7 @@ int count_triggers( trigger **list ) {
 }
 
 void clear_triggers() {
-	trigger **p = &TRIGGER_LIST;
+	trigger **p = &trigger_list;
 	while ( *p != NULL ) {
 		trigger **n = &( (*p)->next );
 		free( (*p)->cmdline );

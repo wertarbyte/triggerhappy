@@ -1,1 +1,1 @@
-int obey_command( struct command *cmd, device **list );
+int obey_command( struct command *cmd );

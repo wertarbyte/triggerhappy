@@ -16,6 +16,8 @@
 
 #define BITFIELD uint32_t
 
+static device *device_list = NULL;
+
 static char *get_device_description(int fd) {
 	char descr[256] = "Unknown";
 	if(ioctl(fd, EVIOCGNAME(sizeof(descr)), descr) < 0) {
@@ -41,8 +43,8 @@ int device_is_suitable(int fd) {
 	);
 }
 
-void add_device(char *dev, int fd, device **list) {
-	device **p = list;
+void add_device(char *dev, int fd) {
+	device **p = &device_list;
 	// find end of list
 	while (*p != NULL) {
 		p = &( (*p)->next );
@@ -56,7 +58,7 @@ void add_device(char *dev, int fd, device **list) {
 			close(fd);
 			return;
 		}
-		*p = malloc(sizeof(**list));
+		*p = malloc(sizeof(*device_list));
 		(*p)->devname = strdup(dev);
 		(*p)->descr = get_device_description(fd);
 		(*p)->fd = fd;
@@ -66,8 +68,8 @@ void add_device(char *dev, int fd, device **list) {
 	}
 }
 
-int remove_device(char *dev, device **list) {
-	device **p = list;
+int remove_device(char *dev) {
+	device **p = &device_list;
 	while (*p != NULL) {
 		if ( strcmp( (*p)->devname, dev ) == 0 ) {
 			device *copy = *p;
@@ -86,8 +88,8 @@ int remove_device(char *dev, device **list) {
 	return 0;
 }
 
-void clear_devices(device **list) {
-	device *p = *list;
+void clear_devices(void) {
+	device *p = device_list;
 	while (p != NULL) {
 		device *next = p->next;
 		close(p->fd);
@@ -96,15 +98,23 @@ void clear_devices(device **list) {
 		free(p);
 		p = next;
 	}
-	*list = NULL;
+	device_list = NULL;
 }
 
-int count_devices(device **list) {
+int count_devices(void) {
 	int n = 0;
-	device **p = list;
-	while (*p != NULL) {
+	device *p = device_list;
+	while (p != NULL) {
 		n++;
-		p = &( (*p)->next );
+		p = p->next;
 	}
 	return n;
+}
+
+void for_each_device( void(*func)(device*) ) {
+	device *p = device_list;
+	while (p != NULL) {
+		func( p );
+		p = p->next;
+	}
 }

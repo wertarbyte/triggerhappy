@@ -32,9 +32,7 @@
 #include "obey.h"
 #include "ignore.h"
 
-/* list of all devices with their FDs */
-static device *devs = NULL;
-
+/* command channel & FD */
 static char *cmd_file = NULL;
 static int cmd_fd = -1;
 
@@ -56,11 +54,14 @@ static int reload_conf = 0;
 /* forward declarations */
 static int reload_triggerfile();
 
+/* FDs to watch */
+static fd_set rfds;
+static int max_fd = -1;
 
 /*
  * Look up event and key names and print them to STDOUT
  */
-void print_event(char* dev, struct input_event ev) {
+static void print_event(char* dev, struct input_event ev) {
 	const char *typename = lookup_type_name( ev );
 	const char *evname = lookup_event_name( ev );
 	if ( evname != NULL ) {
@@ -74,7 +75,7 @@ void print_event(char* dev, struct input_event ev) {
 /*
  * Read event from fd, decode it and pass it to handlers
  */
-int read_event( device *dev ) {
+static int read_event( device *dev ) {
 	int fd = dev->fd;
 	char *devname = dev->devname;
 	struct input_event ev;
@@ -98,56 +99,49 @@ int read_event( device *dev ) {
 	return 0;
 }
 
-static int add_to_fdset( fd_set *fds, device **list ) {
-	int max = 0;
-	device **p = list;
-	while (*p != NULL) {
-		int fd = (*p)->fd;
-		if (fd > max) {
-			max = fd;
+static void check_device( device *d ) {
+	int fd = d->fd;
+	char *dev = d->devname;
+	if (FD_ISSET( fd, &rfds )) {
+		if (read_event( d )) {
+			/* read error? Remove the device! */
+			remove_device( d->devname );
 		}
-
-		FD_SET( fd, fds );
-		p = &( (*p)->next );
-	}
-	return max;
-}
-
-void process_devices( fd_set *fds, device **list ) {
-	device **p = list;
-	while (*p != NULL) {
-		int fd = (*p)->fd;
-		char *dev = (*p)->devname;
-		if (FD_ISSET( fd, fds )) {
-			if (read_event( *p )) {
-				/* read error? Remove the device! */
-				remove_device( (*p)->devname, &devs );
-				return;
-			}
-		}
-		p = &( (*p)->next );
 	}
 }
 
-static void process_events( device **list ) {
-	fd_set rfds;
+static void process_devices(void) {
+	for_each_device( &check_device );
+}
+
+static void add_device_to_fdset( device *d ) {
+	int fd = d->fd;
+	if (fd > max_fd) {
+		max_fd = fd;
+	}
+	FD_SET( fd, &rfds );
+}
+
+
+static void process_events(void) {
 	struct timeval tv;
 	int retval;
 	/* loop as long as we have at least one device or
 	 * the command channel
 	 */
-	while ( count_devices(&devs) > 0 || cmd_fd != -1 ) {
+	while ( count_devices() > 0 || cmd_fd != -1 ) {
 		FD_ZERO( &rfds );
-		int maxfd = 0;
-		maxfd = add_to_fdset( &rfds, &devs );
+		max_fd = -1;
+		/* add device fds */
+		for_each_device( &add_device_to_fdset );
 		/* add command channel */
 		if (cmd_fd != -1) {
 			FD_SET( cmd_fd, &rfds );
-			maxfd = cmd_fd > maxfd ? cmd_fd : maxfd;
+			max_fd = cmd_fd > max_fd ? cmd_fd : max_fd;
 		}
 		tv.tv_sec = 5;
 		tv.tv_usec = 0;
-		retval = select(maxfd+1, &rfds, NULL, NULL, &tv);
+		retval = select(max_fd+1, &rfds, NULL, NULL, &tv);
 		if (retval == -1 && errno != EINTR) {
 			perror("select()");
 			continue;
@@ -158,10 +152,10 @@ static void process_events( device **list ) {
 			reload_triggerfile();
 			continue;
 		} else if (retval) {
-			process_devices( &rfds, &devs );
+			process_devices();
 			if ( cmd_fd != -1 && FD_ISSET( cmd_fd, &rfds ) ) {
 				struct command *cmd = read_command( cmd_fd );
-				obey_command( cmd, &devs );
+				obey_command( cmd );
 				free(cmd);
 			}
 		}
@@ -228,8 +222,9 @@ void cleanup(void) {
 			close( cmd_fd );
 		}
 		unlink(cmd_file);
+		cmd_fd = -1;
 	}
-	clear_devices( &devs );
+	clear_devices();
 	if (pidfile) {
 		unlink(pidfile);
 	}
@@ -346,7 +341,7 @@ int start_readers(int argc, char *argv[], int start) {
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
-		add_device( dev, -1, &devs );
+		add_device( dev, -1 );
 	}
 	if (run_as_daemon) {
 		int err = daemon(0,0);
@@ -371,7 +366,7 @@ int start_readers(int argc, char *argv[], int start) {
 		}
 	}
 
-	process_events( &devs );
+	process_events();
 
 	return 0;
 }
