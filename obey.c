@@ -29,5 +29,9 @@ int obey_command( struct command *cmd, device **list ) {
 		triggers_enabled(0);
 		return 0;
 	}
+	if (cmd->type == CMD_CLEARDEVS) {
+		clear_devices( list );
+		return 0;
+	}
 	return 1;
 }

@@ -4,7 +4,8 @@ enum command_type {
 	CMD_QUIT,
 	CMD_DISABLE,
 	CMD_ENABLE,
-	CMD_PASSFD
+	CMD_PASSFD,
+	CMD_CLEARDEVS
 };
 
 struct command {
