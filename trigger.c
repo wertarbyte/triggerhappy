@@ -62,6 +62,7 @@ trigger* parse_trigger(char* line) {
 	int value = strint( strtok_r(NULL, delim, &sptr) );
 	char *cmd = ct( strtok_r(NULL, "\n", &sptr) );
 	free(cp);
+	cp = NULL;
 
 	/* all fields filled? */
 	if (evname && cmd && (value >= 0)) {
@@ -70,9 +71,11 @@ trigger* parse_trigger(char* line) {
 		et->code = lookup_event_code( evname );
 		et->value = value;
 		et->cmdline = cmd;
-		/* store keystate */
+		/* store modifier state */
 		memcpy(et->modifiers, modifier, sizeof(trigger_modifier));
 		et->next = NULL;
+		free(evname);
+		evname = NULL;
 		return et;
 	} else {
 		free(evname);
