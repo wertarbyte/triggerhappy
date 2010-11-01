@@ -91,15 +91,19 @@ void append_trigger(trigger *t) {
 
 static int read_triggerfile(const char *filename) {
 	trigger **p = &trigger_list;
-        FILE *conf;
-        int len = 0;
-        char *line = NULL;
-        ssize_t read;
-        conf = fopen(filename, "r");
-        if (conf == NULL) {
+	FILE *conf;
+	size_t len = 0;
+	char *line = NULL;
+	ssize_t read;
+
+	if(!filename)
+		return 2;
+
+	conf = fopen(filename, "r");
+	if (conf == NULL) {
 		return 1;
-        }
-        while ((read = getline(&line, &len, conf)) != -1) {
+	}
+	while ((read = getline(&line, &len, conf)) != -1) {
 		trigger *t = parse_trigger( line );
 		if (t) {
 			append_trigger( t );
@@ -108,7 +112,9 @@ static int read_triggerfile(const char *filename) {
 		}
 	}
 	fclose(conf);
+	conf=NULL;
 	free(line);
+	line=NULL;
 	return 0;
 }
 
@@ -198,6 +204,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 		if ( type  == et->type &&
 		     code  == et->code &&
 		     value == et->value &&
+		     et->cmdline &&
 		     mods_equal(ksh, et->modifiers)) {
 			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
 			int pid = fork();
@@ -219,6 +226,8 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 
 int count_triggers( trigger **list ) {
 	int n = 0;
+	if(!list)
+		return 0;
 	trigger *p = *list;
 	while ( p != NULL ) {
 		n++;

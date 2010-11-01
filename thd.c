@@ -167,9 +167,8 @@ static int write_pidfile( char *pidfile ) {
 	if (pid == NULL) {
 		return 1;
 	}
-	fprintf(pid, "%u\n", getpid());
-	fclose(pid);
-	return 0;
+	fprintf(pid, "%u\n", (unsigned int) getpid());
+	return fclose(pid);
 }
 
 static struct option long_options[] = {
