@@ -336,7 +336,7 @@ int start_readers(int argc, char *argv[], int start) {
 		}
 	}
 
-	// create one thread for every device file supplied
+	/* add every device file supplied on command line */
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
