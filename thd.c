@@ -72,6 +72,19 @@ static void print_event(char* dev, struct input_event ev) {
 	fflush(stdout);
 }
 
+static void print_triggerline(struct input_event ev, keystate_holder ksh) {
+	const char *evname = lookup_event_name( ev );
+	char *state = ( ev.type == EV_KEY ? get_keystate_ignore_key( ksh, ev.code ) : "");
+	const char *d = strlen(state)>0 ? "+" : "";
+	if ( evname != NULL ) {
+		if (ev.type == EV_KEY) {
+			printf( "# %s%s%s\t%d\tcommand\n", state, d, evname, ev.value );
+		}
+		fflush(stdout);
+	}
+	free(state);
+}
+
 /*
  * Read event from fd, decode it and pass it to handlers
  */
@@ -91,7 +104,7 @@ static int read_event( device *dev ) {
 		}
 		if (dump_events) {
 			print_event( devname, ev );
-			print_keystate( *keystate );
+			print_triggerline( ev, *keystate );
 		}
 		run_triggers( ev.type, ev.code, ev.value, *keystate );
 		change_keystate( *keystate, ev );

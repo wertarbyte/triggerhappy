@@ -33,7 +33,9 @@ Read trigger definitions from F<conf>, which can either be a file or a directory
 
 =item B<--dump>
 
-Dump all recognized events to STDOUT
+Dump all recognized events to STDOUT. This can also be utilized to create a skeleton trigger configuration by redirecting the printed configuration lines to a configuration file, adding the desired command and activating the generated line by removing the comment mark "#" at its beginning:
+
+  thd --dump /dev/input/event* | grep ^# > /etc/triggerhappy/triggers.d/skeleton.conf
 
 =item B<--socket> F<file>
 
