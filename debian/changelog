@@ -1,3 +1,18 @@
+triggerhappy (0.1.4-1) unstable; urgency=low
+
+  [ Eduard Bloch ]
+  * Minor modifications for better code safety
+
+  [ Stefan Tomanek ]
+  * update th-cmd cmdline parsing and add --clear
+  * make --dump print skeleton lines for trigger conf
+  * fix "Provides" in init script
+  * fix typos in man page
+  * fix description
+  * add debian/watch
+
+ -- Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>  Thu, 18 Nov 2010 01:24:22 +0100
+
 triggerhappy (0.1.3-1) unstable; urgency=low
 
   * drop root with --user <name>
