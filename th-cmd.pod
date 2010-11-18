@@ -6,7 +6,7 @@ th-cmd -- triggerhappy commander
 
 =head1 SYNOPSIS
 
-B<th-cmd> --socket B<< <socket> >> [B<--passfd>] [B<--clear>|B<--enable>|B<--disable>|B<--quit>|B<--udev>|B<--add> F<< <devices...> >>|B<--remove> F<< <devices...> >>]
+B<th-cmd> --socket B<< <socket> >> [B<--passfd>] [B<--clear>|B<--enable>|B<--disable>|B<--mode> I<< <mode> >>|B<--quit>|B<--udev>|B<--add> F<< <devices...> >>|B<--remove> F<< <devices...> >>]
 
 =head1 DESCRIPTION
 
@@ -32,7 +32,6 @@ Remove specified devices from the running daemon.
 
 Remove all devices from the running daemon.
 
-
 =item B<--udev>
 
 Deduce operation and device name from udev environment (for use in udev rules).
@@ -44,6 +43,10 @@ Disable the execution of triggers.
 =item B<--enable>
 
 Re-enable the execution of triggers.
+
+=item B<--mode> I<< <newmode> >>
+
+Change the mode of the triggerhappy daemon to I<< <newmode> >>. If no new mode is specified, the daemon switches to default mode.
 
 =item B<--quit>
 

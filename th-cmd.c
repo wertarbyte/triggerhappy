@@ -19,6 +19,7 @@ void show_help(void) {
 	fprintf( stderr, "  th-cmd --socket <socket> --clear\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --enable\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --disable\n");
+	fprintf( stderr, "  th-cmd --socket <socket> --mode <mode>\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --quit\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --help\n");
 }
@@ -32,6 +33,7 @@ int main(int argc, char *argv[]) {
 	static int op_udev = 0;
 	static int op_en = 0;
 	static int op_dis = 0;
+	static int op_mode = 0;
 	static int op_quit = 0;
 	enum command_type ctype = -1;
 
@@ -44,6 +46,7 @@ int main(int argc, char *argv[]) {
 		{ "passfd", 0, &passfd, 1 },
 		{ "enable", 0, &op_en, 1 },
 		{ "disable", 0, &op_dis, 1 },
+		{ "mode", 0, &op_mode, 1 },
 		{ "quit", 0, &op_quit, 1 },
 		{ "help", 0, 0, 'h' },
 		{ 0, 0, 0, 0 }
@@ -63,13 +66,12 @@ int main(int argc, char *argv[]) {
 			case 'h':
 			case '?':
 			case -1:
-				fprintf(stderr, "FPPP\n");
 				show_help();
 				return 1;
 		}
 	}
 
-	if ( op_add + op_rem + op_clear + op_udev + op_en + op_dis + op_quit != 1 ) {
+	if ( op_add + op_rem + op_clear + op_udev + op_en + op_dis + op_mode + op_quit != 1 ) {
 		fprintf(stderr, "A single command must be specified!\n");
 		show_help();
 		return 1;
@@ -104,6 +106,7 @@ int main(int argc, char *argv[]) {
 		else if (op_clear) ctype = CMD_CLEARDEVS;
 		else if (op_en) ctype = CMD_ENABLE;
 		else if (op_dis) ctype = CMD_DISABLE;
+		else if (op_mode) ctype = CMD_CHANGEMODE;
 		else if (op_quit) ctype = CMD_QUIT;
 
 		if ( ctype == -1) {
@@ -115,6 +118,11 @@ int main(int argc, char *argv[]) {
 			case CMD_DISABLE:
 			case CMD_QUIT:
 				err = send_command( s, ctype, "", 0 );
+				break;
+			case CMD_CHANGEMODE:
+				err = send_command( s, ctype,
+						(optind < argc) ? argv[optind] : "",
+						0 );
 				break;
 			case CMD_ADD:
 			case CMD_REMOVE:
