@@ -12,7 +12,7 @@ Package: triggerhappy
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: global, user and session independent hotkey daemon
-  Triggerhappy observes all connected input devices and launches
-  configured commands when certain keys are pressed. The daemon
-  works as a system wide service and is independent of any user
-  session.
+ Triggerhappy observes all connected input devices and launches
+ configured commands when certain keys are pressed. The daemon
+ works as a system wide service and is independent of any user
+ session.
