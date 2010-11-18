@@ -322,6 +322,8 @@ int main(int argc, char *argv[]) {
 	}
 	/* init keystate holder */
 	init_keystate_holder(&keystate);
+	/* set initial trigger mode */
+	change_trigger_mode("");
 	/* install signal handler */
 	struct sigaction handler;
 	handler.sa_handler = handle_signal;
