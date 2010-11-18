@@ -7,6 +7,7 @@ typedef struct trigger {
 	int code;
 	int value;
 	trigger_modifier modifiers;
+	char *mode;
 	char *cmdline;
 	struct trigger *next;
 } trigger;
@@ -18,3 +19,5 @@ void run_triggers(int type, int code, int value, keystate_holder ksh);
 void clear_triggers();
 
 void triggers_enabled( int status );
+
+void change_trigger_mode( const char *tmode );

@@ -109,7 +109,27 @@ Any number of event handlers can be placed in the configuration file:
     KEY_VOLUMEUP    2      /usr/bin/amixer set Master 5%+
     KEY_VOLUMEDOWN  1      /usr/bin/amixer set Master 5%-
     KEY_VOLUMEDOWN  2      /usr/bin/amixer set Master 5%-
-    
+
+In more complex situations, triggerhappy can provide multiple modes that map a
+single event to different keys; triggers are bound to a specific mode by appending
+its name to the event name:
+
+    KEY_KPPLUS@media	1	/usr/bin/mpc next
+    KEY_KPMINUS@media	1	/usr/bin/mpc prev
+
+These two lines will only cause mpc to be called if the triggerhappy daemon is in
+"media" mode. Changing the mode can be achieved by placing a special trigger inside
+the configuration:
+
+    KEY_F12@		1	@media
+    KEY_F12@media	1	@
+
+These two lines make the F12 key toggle between the (nameless) default mode and the
+newly defined media mode.
+
+Triggers with "@" appended are only executed if the specified mode is active; all other
+triggers are enabled in every mode.
+
 =head1 AUTHOR
 
 Stefan Tomanek E<lt>stefan.tomanek+th@wertarbyte.deE<gt>

@@ -33,5 +33,9 @@ int obey_command( struct command *cmd ) {
 		clear_devices();
 		return 0;
 	}
+	if (cmd->type == CMD_CHANGEMODE) {
+		change_trigger_mode( &(cmd->param[0] ) );
+		return 0;
+	}
 	return 1;
 }
