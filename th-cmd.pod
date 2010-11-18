@@ -6,11 +6,11 @@ th-cmd -- triggerhappy commander
 
 =head1 SYNOPSIS
 
-B<th-cmd> --socket B<< <socket> >> [B<--passfd>] [B<--enable>|B<--disable>|B<--quit>|B<--udev>|B<--add> F<< <device> >>|B<--remove> F<< <device> >>]
+B<th-cmd> --socket B<< <socket> >> [B<--passfd>] [B<--clear>|B<--enable>|B<--disable>|B<--quit>|B<--udev>|B<--add> F<< <devices...> >>|B<--remove> F<< <devices...> >>]
 
 =head1 DESCRIPTION
 
-THis program is used to issue commands to a running triggerhappy daemon. It utilizes an unix domain socket bound by the daemon.
+This program is used to issue commands to a running triggerhappy daemon. It utilizes an unix domain socket bound by the daemon.
 
 =head1 OPTIONS AND ARGUMENTS
 
@@ -20,13 +20,18 @@ THis program is used to issue commands to a running triggerhappy daemon. It util
 
 The socket file opened by the running triggerhappy daemon instance.
 
-=item B<--add> B<< <device> >>
+=item B<--add> F<< <devices...> >>
 
-Instruct the running daemon to open the input device.
+Instruct the running daemon to open the input devices specified on the command line
 
-=item B<--remove> B<< <device> >>
+=item B<--remove> F<< <devices...> >>
 
-Remove input device from the running daemon.
+Remove specified devices from the running daemon.
+
+=item B<--clear>
+
+Remove all devices from the running daemon.
+
 
 =item B<--udev>
 
@@ -46,7 +51,7 @@ Terminate the triggerhappy daemon.
 
 =item B<--passfd>
 
-Instead of instructing the daemon to open the device, open the device and apss the file descriptor to the daemon. This allows the adding of new devices to a daemon having dropped its privileges, however the th-cmd process must have access to the device file.
+Instead of instructing the daemon to open the device, open the device and pass the file descriptor to the daemon. This allows the adding of new devices to a daemon having dropped its privileges, however the th-cmd process must have access to the device file.
 
 =back
 

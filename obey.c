@@ -4,17 +4,17 @@
 #include "keystate.h"
 #include "trigger.h"
 
-int obey_command( struct command *cmd, device **list ) {
+int obey_command( struct command *cmd ) {
 	if (cmd->type == CMD_ADD) {
-		add_device( &(cmd->param[0]), -1, list );
+		add_device( &(cmd->param[0]), -1 );
 		return 0;
 	}
 	if (cmd->type == CMD_PASSFD) {
-		add_device( &(cmd->param[0]), cmd->fd, list );
+		add_device( &(cmd->param[0]), cmd->fd );
 		return 0;
 	}
 	if (cmd->type == CMD_REMOVE) {
-		remove_device( &(cmd->param[0]), list );
+		remove_device( &(cmd->param[0]) );
 		return 0;
 	}
 	if (cmd->type == CMD_QUIT) {
@@ -27,6 +27,10 @@ int obey_command( struct command *cmd, device **list ) {
 	}
 	if (cmd->type == CMD_DISABLE) {
 		triggers_enabled(0);
+		return 0;
+	}
+	if (cmd->type == CMD_CLEARDEVS) {
+		clear_devices();
 		return 0;
 	}
 	return 1;

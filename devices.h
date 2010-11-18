@@ -5,7 +5,9 @@ typedef struct device {
 	struct device *next;
 } device;
 
-void add_device(char *dev, int fd, device **list);
-int remove_device(char *dev, device **list);
-void clear_devices(device **list);
-int count_devices(device **list);
+void add_device(char *dev, int fd);
+int remove_device(char *dev);
+void clear_devices(void);
+int count_devices(void);
+
+void for_each_device( void(*func)(device*) );

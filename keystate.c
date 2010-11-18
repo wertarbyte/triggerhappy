@@ -35,16 +35,11 @@ void change_keystate( keystate_holder ksh, struct input_event ev ) {
 	}
 }
 
-/*
- * Print the concatenated names of all currently pressed keys
- */
-void print_keystate(keystate_holder ksh) {
-	char *str = get_keystate(ksh);
-	printf("%s\n", str);
-	free(str);
+char *get_keystate(keystate_holder ksh) {
+	return get_keystate_ignore_key( ksh, -1 );
 }
 
-char *get_keystate(keystate_holder ksh) {
+char *get_keystate_ignore_key(keystate_holder ksh, int ignore_key) {
 	const int bsize = 1024;
 	char *KS = "+";
 
@@ -54,7 +49,7 @@ char *get_keystate(keystate_holder ksh) {
 	int i;
 	int n = 0;
 	for (i=0; i<=KEY_MAX; i++) {
-		if (ksh[i] > 0) {
+		if (i != ignore_key && ksh[i] > 0) {
 			if (n>0) {
 				strncat( buf, KS, bsize-1-strlen(KS) );
 			}

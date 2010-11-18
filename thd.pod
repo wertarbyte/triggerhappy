@@ -33,7 +33,9 @@ Read trigger definitions from F<conf>, which can either be a file or a directory
 
 =item B<--dump>
 
-Dump all recognized events to STDOUT
+Dump all recognized events to STDOUT. This can also be utilized to create a skeleton trigger configuration by redirecting the printed configuration lines to a configuration file, adding the desired command and activating the generated line by removing the comment mark "#" at its beginning:
+
+  thd --dump /dev/input/event* | grep ^# > /etc/triggerhappy/triggers.d/skeleton.conf
 
 =item B<--socket> F<file>
 
@@ -73,7 +75,7 @@ Key events carry the value I<1> for a key being pressed and transmit the payload
 
 The command can include any number of arguments. Please include the full path to avoid trouble through different $PATH settings for the daemon and your interactive session.
 
-The three fields are seperated by an arbitrary number of whitespaces, while anything behind a # character is ignored and considered a comment.
+The three fields are separated by an arbitrary number of whitespaces, while anything behind a # character is ignored and considered a comment.
 
 =head1 EXAMPLE
 
@@ -102,7 +104,7 @@ Any number of event handlers can be placed in the configuration file:
     KEY_SLEEP+KEY_LEFTSHIFT     1       /usr/sbin/hibernate-disk
 
     # /etc/triggerhappy/triggers.d/audio.conf
-    # Change mixer volume when pressing the appropiate keys (or holding them)
+    # Change mixer volume when pressing the appropriate keys (or holding them)
     KEY_VOLUMEUP    1      /usr/bin/amixer set Master 5%+
     KEY_VOLUMEUP    2      /usr/bin/amixer set Master 5%+
     KEY_VOLUMEDOWN  1      /usr/bin/amixer set Master 5%-

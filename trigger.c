@@ -9,7 +9,7 @@
 #include "keystate.h"
 #include "trigger.h"
 
-trigger *TRIGGER_LIST = NULL;
+static trigger *trigger_list = NULL;
 
 static int triggers_are_enabled = 1;
 
@@ -62,6 +62,7 @@ trigger* parse_trigger(char* line) {
 	int value = strint( strtok_r(NULL, delim, &sptr) );
 	char *cmd = ct( strtok_r(NULL, "\n", &sptr) );
 	free(cp);
+	cp = NULL;
 
 	/* all fields filled? */
 	if (evname && cmd && (value >= 0)) {
@@ -70,9 +71,11 @@ trigger* parse_trigger(char* line) {
 		et->code = lookup_event_code( evname );
 		et->value = value;
 		et->cmdline = cmd;
-		/* store keystate */
+		/* store modifier state */
 		memcpy(et->modifiers, modifier, sizeof(trigger_modifier));
 		et->next = NULL;
+		free(evname);
+		evname = NULL;
 		return et;
 	} else {
 		free(evname);
@@ -82,7 +85,7 @@ trigger* parse_trigger(char* line) {
 }
 
 void append_trigger(trigger *t) {
-	trigger **p = &TRIGGER_LIST;
+	trigger **p = &trigger_list;
 	while (*p != NULL) {
 		p = &( (*p)->next );
 	}
@@ -90,16 +93,20 @@ void append_trigger(trigger *t) {
 }
 
 static int read_triggerfile(const char *filename) {
-	trigger **p = &TRIGGER_LIST;
-        FILE *conf;
-        int len = 0;
-        char *line = NULL;
-        ssize_t read;
-        conf = fopen(filename, "r");
-        if (conf == NULL) {
+	trigger **p = &trigger_list;
+	FILE *conf;
+	size_t len = 0;
+	char *line = NULL;
+	ssize_t read;
+
+	if(!filename)
+		return 2;
+
+	conf = fopen(filename, "r");
+	if (conf == NULL) {
 		return 1;
-        }
-        while ((read = getline(&line, &len, conf)) != -1) {
+	}
+	while ((read = getline(&line, &len, conf)) != -1) {
 		trigger *t = parse_trigger( line );
 		if (t) {
 			append_trigger( t );
@@ -108,7 +115,9 @@ static int read_triggerfile(const char *filename) {
 		}
 	}
 	fclose(conf);
+	conf=NULL;
 	free(line);
+	line=NULL;
 	return 0;
 }
 
@@ -193,11 +202,12 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 	if (triggers_are_enabled == 0) {
 		return;
 	}
-	trigger *et = TRIGGER_LIST;
+	trigger *et = trigger_list;
 	while (et != NULL) {
 		if ( type  == et->type &&
 		     code  == et->code &&
 		     value == et->value &&
+		     et->cmdline &&
 		     mods_equal(ksh, et->modifiers)) {
 			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
 			int pid = fork();
@@ -219,6 +229,8 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 
 int count_triggers( trigger **list ) {
 	int n = 0;
+	if(!list)
+		return 0;
 	trigger *p = *list;
 	while ( p != NULL ) {
 		n++;
@@ -228,7 +240,7 @@ int count_triggers( trigger **list ) {
 }
 
 void clear_triggers() {
-	trigger **p = &TRIGGER_LIST;
+	trigger **p = &trigger_list;
 	while ( *p != NULL ) {
 		trigger **n = &( (*p)->next );
 		free( (*p)->cmdline );
