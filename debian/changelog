@@ -1,7 +1,7 @@
 triggerhappy (0.1.5-1) unstable; urgency=low
 
   * add "mode" support
-  * make trigger mode changable through th-cmd
+  * make trigger mode changeable through th-cmd
   * try to autodetect the location of <linux/input.h>
 
  -- Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>  Thu, 18 Nov 2010 15:36:06 +0100
