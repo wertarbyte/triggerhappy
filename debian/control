@@ -1,5 +1,5 @@
 Source: triggerhappy
-Section: admin
+Section: utils
 Priority: extra
 Maintainer: Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>
 Build-Depends: debhelper (>= 7.0.50~)
