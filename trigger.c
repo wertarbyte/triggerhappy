@@ -23,9 +23,10 @@ char *get_trigger_mode() {
 void change_trigger_mode(const char *mode) {
 	if (trigger_mode != NULL) {
 		free(trigger_mode);
+		/* suppress the message on the first change to default mode */
+		fprintf(stderr, "Changing trigger mode to <%s>\n", trigger_mode);
 	}
 	trigger_mode = strdup(mode);
-	fprintf(stderr, "Trigger mode changed to <%s>\n", trigger_mode);
 }
 
 void triggers_enabled( int status ) {
