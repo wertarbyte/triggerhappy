@@ -1,3 +1,11 @@
+triggerhappy (0.1.6-1) unstable; urgency=low
+
+  * fix typo in changelog
+  * suppress mode change message on startup
+  * ignore the triggering key while checking modifier
+
+ -- Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>  Sun, 21 Nov 2010 22:17:50 +0100
+
 triggerhappy (0.1.5-1) unstable; urgency=low
 
   * add "mode" support
