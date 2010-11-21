@@ -23,9 +23,10 @@ char *get_trigger_mode() {
 void change_trigger_mode(const char *mode) {
 	if (trigger_mode != NULL) {
 		free(trigger_mode);
+		/* suppress the message on the first change to default mode */
+		fprintf(stderr, "Changing trigger mode to <%s>\n", trigger_mode);
 	}
 	trigger_mode = strdup(mode);
-	fprintf(stderr, "Trigger mode changed to <%s>\n", trigger_mode);
 }
 
 void triggers_enabled( int status ) {
@@ -206,8 +207,7 @@ int read_triggers(const char *path) {
 	}
 }
 
-
-static int mods_equal( keystate_holder ksh, trigger_modifier tm ) {
+static int mods_equal(keystate_holder ksh, trigger_modifier tm, int ignore_key) {
 	int n = 0;
 	while ( n < TRIGGER_MODIFIERS_MAX ) {
 		int code = tm[n]; /* this key must be pressed */
@@ -225,7 +225,7 @@ static int mods_equal( keystate_holder ksh, trigger_modifier tm ) {
 	 */
 	int x;
 	for (x=0; x<=KEY_MAX; x++) {
-		if (ksh[x] > 0) {
+		if (x != ignore_key && ksh[x] > 0) {
 			n--;
 		}
 	}
@@ -249,7 +249,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 		     value == et->value &&
 		     et->cmdline &&
 		     correct_mode( et->mode ) &&
-		     mods_equal(ksh, et->modifiers)) {
+		     mods_equal(ksh, et->modifiers, (type==EV_KEY?code:-1) )) {
 			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
 			/* switch trigger mode or execute program? */
 			if (et->cmdline[0] == '@') {
