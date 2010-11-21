@@ -17,7 +17,7 @@ NAME=thd                      # Introduce the short server's name here
 PNAME=triggerhappy            # Package name
 DAEMON=/usr/sbin/thd          # Introduce the server's location here
 PIDFILE=/var/run/$NAME.pid
-DAEMON_ARGS="--daemon --triggers /etc/triggerhappy/triggers.d/ --socket /var/run/thd.socket --pidfile $PIDFILE /dev/input/event*"     # Arguments to run the daemon with
+DAEMON_ARGS="--daemon --triggers /etc/triggerhappy/triggers.d/ --socket /var/run/thd.socket --pidfile $PIDFILE --user nobody /dev/input/event*"     # Arguments to run the daemon with
 DAEMON_OPTS=""
 SCRIPTNAME=/etc/init.d/$PNAME
 

@@ -7,6 +7,11 @@
 #
 
 # Additional options that are passed to the Daemon.
-# e.g. to drop root privileges after startup:
-# DAEMON_OPTS="--user nobody"
 DAEMON_OPTS=""
+
+# The Triggerhappy daemon (thd) drops its root privileges after
+# startup and becomes "nobody". If you want it to retain its root
+# status (e.g. to run commands only accessible to the system user),
+# uncomment the following line or specifiy the user option yourself:
+#
+# DAEMON_OPTS="--user root"
