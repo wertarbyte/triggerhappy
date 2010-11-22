@@ -15,7 +15,7 @@ for key, switch or button events and can launch arbitrary commands specified by 
 to hotkey services provided by desktop environments, Triggerhappy is especially suited to hardware related switches
 like volume or wifi control; it works independently from a specific user being logged in and is also suitable for embedded systems that do not a graphical user interface.
 
-=head1 OPTIONS AND ARGUMENTS
+=head1 OPTIONS
 
 =over
 
