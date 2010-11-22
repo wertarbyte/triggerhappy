@@ -1,7 +1,7 @@
 Source: triggerhappy
 Section: utils
 Priority: extra
-Maintainer: Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>
+Maintainer: Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>
 Build-Depends: debhelper (>= 7.0.50~)
 Standards-Version: 3.9.1
 Homepage: http://github.com/wertarbyte/triggerhappy
