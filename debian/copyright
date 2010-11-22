@@ -1,12 +1,12 @@
 This work was packaged for Debian by:
 
-    Stefan Tomanek <stefan.tomanek+th@wertarbyte.de> on Sat, 23 Oct 2010 10:59:38 +0200
+    Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de> on Sat, 23 Oct 2010 10:59:38 +0200
 
 It was downloaded from:
 
     <http://github.com/wertarbyte/triggerhappy>
 
-Upstream Author(s):
+Upstream Author:
 
     Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>
 
@@ -34,7 +34,7 @@ Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
 The Debian packaging is:
 
-    Copyright (C) 2010 Stefan Tomanek <opensource+triggerhappy@wertarbyte.de>
+    Copyright (C) 2010 Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>
 
 and is licensed under the GPL version 3, see above.
 
