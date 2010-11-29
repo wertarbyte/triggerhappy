@@ -3,6 +3,7 @@
 #include "command.h"
 #include "keystate.h"
 #include "trigger.h"
+#include "thd.h"
 
 int obey_command( struct command *cmd ) {
 	if (cmd->type == CMD_ADD) {

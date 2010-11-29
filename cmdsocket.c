@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include "devices.h"
 #include "command.h"

@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -7,6 +6,7 @@
 #include <sys/un.h>
 #include <strings.h>
 #include <getopt.h>
+#include <unistd.h>
 
 #include "devices.h"
 #include "command.h"

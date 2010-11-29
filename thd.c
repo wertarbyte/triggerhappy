@@ -114,7 +114,6 @@ static int read_event( device *dev ) {
 
 static void check_device( device *d ) {
 	int fd = d->fd;
-	char *dev = d->devname;
 	if (FD_ISSET( fd, &rfds )) {
 		if (read_event( d )) {
 			/* read error? Remove the device! */
@@ -266,6 +265,53 @@ static void handle_signal(int sig) {
 	}
 }
 
+int start_readers(int argc, char *argv[], int start) {
+	if (argc-start < 1 && cmd_file == NULL) {
+		fprintf(stderr, "No input device files or command pipe specified.\n");
+		return 1;
+	}
+	/* open command pipe */
+	if (cmd_file) {
+		cmd_fd = bind_cmdsocket(cmd_file);
+		if (cmd_fd < 0) {
+			return 1;
+		}
+	}
+
+	/* add every device file supplied on command line */
+	int i;
+	for (i=start; i<argc; i++) {
+		char *dev = argv[i];
+		add_device( dev, -1 );
+	}
+	if (run_as_daemon) {
+		int err = daemon(0,0);
+		if (err) {
+			perror("daemon()");
+		}
+	}
+	if (pidfile) {
+		write_pidfile( pidfile );
+	}
+	/* drop privileges */
+	if (user) {
+		struct passwd *pw = getpwnam(user);
+		if (pw) {
+			if ( setuid( pw->pw_uid ) ) {
+				perror("setuid");
+				return 1;
+			}
+		} else {
+			fprintf(stderr, "Unknown username '%s'.\n", user);
+			return 1;
+		}
+	}
+
+	process_events();
+
+	return 0;
+}
+
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
 	int option_index = 0;
@@ -338,49 +384,3 @@ int main(int argc, char *argv[]) {
 	return status;
 }
 
-int start_readers(int argc, char *argv[], int start) {
-	if (argc-start < 1 && cmd_file == NULL) {
-		fprintf(stderr, "No input device files or command pipe specified.\n");
-		return 1;
-	}
-	/* open command pipe */
-	if (cmd_file) {
-		cmd_fd = bind_cmdsocket(cmd_file);
-		if (cmd_fd < 0) {
-			return 1;
-		}
-	}
-
-	/* add every device file supplied on command line */
-	int i;
-	for (i=start; i<argc; i++) {
-		char *dev = argv[i];
-		add_device( dev, -1 );
-	}
-	if (run_as_daemon) {
-		int err = daemon(0,0);
-		if (err) {
-			perror("daemon()");
-		}
-	}
-	if (pidfile) {
-		write_pidfile( pidfile );
-	}
-	/* drop privileges */
-	if (user) {
-		struct passwd *pw = getpwnam(user);
-		if (pw) {
-			if ( setuid( pw->pw_uid ) ) {
-				perror("setuid");
-				return 1;
-			}
-		} else {
-			fprintf(stderr, "Unknown username '%s'.\n", user);
-			return 1;
-		}
-	}
-
-	process_events();
-
-	return 0;
-}
