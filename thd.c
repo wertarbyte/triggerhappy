@@ -282,7 +282,9 @@ int start_readers(int argc, char *argv[], int start) {
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
-		add_device( dev, -1 );
+		/* TODO we should provide a method to optionally grab the device */
+		int grab_dev = 0;
+		add_device( dev, -1, 0 );
 	}
 	if (run_as_daemon) {
 		int err = daemon(0,0);

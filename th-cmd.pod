@@ -56,6 +56,10 @@ Terminate the triggerhappy daemon.
 
 Instead of instructing the daemon to open the device, open the device and pass the file descriptor to the daemon. This allows the adding of new devices to a daemon having dropped its privileges, however the th-cmd process must have access to the device file.
 
+=item B<--grab>
+
+Grab the device; the triggerhappy daemon will try to get exclusive access to the device, other applications will not receive the events emitted by it.
+
 =back
 
 =head1 AUTHOR

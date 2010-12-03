@@ -74,12 +74,13 @@ struct command *read_command( int cmd_fd ) {
 	return cmd;
 }
 
-int send_command( int cmd_fd, enum command_type type, char *param, int passfd ) {
+int send_command( int cmd_fd, enum command_type type, char *param, int passfd, int exclusive ) {
 	if (type == CMD_ADD && passfd == 1) {
 		type = CMD_PASSFD;
 	}
 	struct command cmd = {
 		.fd    = -1,
+		.exclusive = exclusive,
 		.type  = type,
 		.param = {0}
 	};
