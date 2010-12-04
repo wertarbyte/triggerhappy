@@ -31,10 +31,13 @@
 #include "cmdsocket.h"
 #include "obey.h"
 #include "ignore.h"
+#include "uinput.h"
 
 /* command channel & FD */
 static char *cmd_file = NULL;
 static int cmd_fd = -1;
+
+static char *uinput_dev = NULL;
 
 static int dump_events = 0;
 static int run_as_daemon = 0;
@@ -192,6 +195,7 @@ static struct option long_options[] = {
 	{"socket",	required_argument, 0, 's'},
 	{"ignore",	required_argument, 0, 'i'},
 	{"help",	no_argument, 0, 'h'},
+	{"uinput",	required_argument, 0, '<'},
 	{"listevents",	no_argument, 0, 'l'},
 	{0,0,0,0} /* end of list */
 };
@@ -228,6 +232,7 @@ static void list_events(void) {
 }
 
 void cleanup(void) {
+	close_uinput();
 	if (cmd_file) {
 		if (cmd_fd != -1) {
 			close( cmd_fd );
@@ -284,7 +289,7 @@ int start_readers(int argc, char *argv[], int start) {
 		char *dev = argv[i];
 		/* TODO we should provide a method to optionally grab the device */
 		int grab_dev = 0;
-		add_device( dev, -1, 0 );
+		add_device( dev, -1, grab_dev );
 	}
 	if (run_as_daemon) {
 		int err = daemon(0,0);
@@ -359,6 +364,9 @@ int main(int argc, char *argv[]) {
 			case 'u':
 				user = optarg;
 				break;
+			case '<':
+				uinput_dev = optarg;
+				break;
 			case '?':
 			default:
 				return 1;
@@ -372,6 +380,11 @@ int main(int argc, char *argv[]) {
 	init_keystate_holder(&keystate);
 	/* set initial trigger mode */
 	change_trigger_mode("");
+	/* open uinput if requested */
+	if (open_uinput(uinput_dev) == -1) {
+		fprintf(stderr, "Error setting up uinput support\n");
+		return 1;
+	}
 	/* install signal handler */
 	struct sigaction handler;
 	handler.sa_handler = handle_signal;

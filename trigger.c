@@ -9,6 +9,7 @@
 #include "eventnames.h"
 #include "keystate.h"
 #include "trigger.h"
+#include "uinput.h"
 
 static trigger *trigger_list = NULL;
 
@@ -257,6 +258,16 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 				 * to avoid changing back to the original mode
 				 */
 				break;
+			} else if (et->cmdline[0] == '<' ) {
+				char *keyname = &(et->cmdline[1]);
+				fprintf(stderr, "Sending event: %s\n", keyname);
+				int type = lookup_event_type( keyname );
+				int code = lookup_event_code( keyname );
+				if (type && code) {
+					send_event( type, code, 1 );
+					send_event( type, code, 0 );
+					send_event( EV_SYN, 0, 0 );
+				}
 			} else {
 				int pid = fork();
 				if (pid == 0 ) {

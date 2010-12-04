@@ -3,7 +3,7 @@ DESTDIR:=/
 BINDIR:=$(DESTDIR)/$(PREFIX)/sbin/
 MANDIR:=$(DESTDIR)/$(PREFIX)/share/man/man1/
 
-THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore
+THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore uinput
 THCMD_COMPS := th-cmd cmdsocket
 
 MAKEDEPEND = $(CC) -M -MG $(CPPFLAGS) -o $*.d $<
