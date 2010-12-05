@@ -381,7 +381,7 @@ int main(int argc, char *argv[]) {
 	/* set initial trigger mode */
 	change_trigger_mode("");
 	/* open uinput if requested */
-	if (open_uinput(uinput_dev) == -1) {
+	if (uinput_dev != NULL && open_uinput(uinput_dev) == -1) {
 		fprintf(stderr, "Error setting up uinput support\n");
 		return 1;
 	}
