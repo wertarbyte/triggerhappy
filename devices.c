@@ -43,7 +43,7 @@ int device_is_suitable(int fd) {
 	);
 }
 
-void add_device(char *dev, int fd) {
+void add_device(char *dev, int fd, int excl) {
 	device **p = &device_list;
 	// find end of list
 	while (*p != NULL) {
@@ -58,10 +58,19 @@ void add_device(char *dev, int fd) {
 			close(fd);
 			return;
 		}
+		/* grab device exclusively */
+		if (excl) {
+			if (ioctl(fd, EVIOCGRAB, 1) == -1) {
+				fprintf(stderr, "Device %s cannot be grabbed exclusively.\n", dev);
+				close(fd);
+				return;
+			}
+		}
 		*p = malloc(sizeof(*device_list));
 		(*p)->devname = strdup(dev);
 		(*p)->descr = get_device_description(fd);
 		(*p)->fd = fd;
+		(*p)->exclusive = excl;
 		(*p)->next = NULL;
 	} else {
 		fprintf( stderr, "Error opening '%s': %s\n", dev, strerror(errno) );

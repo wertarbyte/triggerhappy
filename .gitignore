@@ -5,6 +5,7 @@ th-cmd.1
 *.o
 /*.d
 evtable_*.h
+version.h
 
 # buildpackage stuff
 /debian/files
@@ -15,4 +16,3 @@ evtable_*.h
 /debian/triggerhappy.prerm.debhelper
 /debian/triggerhappy.substvars
 /debian/triggerhappy/
-

@@ -3,14 +3,15 @@
 #include "command.h"
 #include "keystate.h"
 #include "trigger.h"
+#include "thd.h"
 
 int obey_command( struct command *cmd ) {
 	if (cmd->type == CMD_ADD) {
-		add_device( &(cmd->param[0]), -1 );
+		add_device( &(cmd->param[0]), -1, cmd->exclusive );
 		return 0;
 	}
 	if (cmd->type == CMD_PASSFD) {
-		add_device( &(cmd->param[0]), cmd->fd );
+		add_device( &(cmd->param[0]), cmd->fd, cmd->exclusive );
 		return 0;
 	}
 	if (cmd->type == CMD_REMOVE) {

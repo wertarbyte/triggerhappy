@@ -9,6 +9,7 @@
 #include "eventnames.h"
 #include "keystate.h"
 #include "trigger.h"
+#include "uinput.h"
 
 static trigger *trigger_list = NULL;
 
@@ -51,7 +52,6 @@ static char* ct(char *token) {
 }
 
 trigger* parse_trigger(char* line) {
-	char *token = NULL;
 	char *sptr = NULL;
 
 	/* ignore everything behind # */
@@ -129,7 +129,6 @@ void append_trigger(trigger *t) {
 }
 
 static int read_triggerfile(const char *filename) {
-	trigger **p = &trigger_list;
 	FILE *conf;
 	size_t len = 0;
 	char *line = NULL;
@@ -182,6 +181,7 @@ int read_triggers(const char *path) {
 		n = scandir(path, &namelist, accept_triggerfile, alphasort);
 		if ( n < 0) {
 			perror("scandir");
+			return 1;
 		} else {
 			while (n--) {
 				struct stat sf;
@@ -203,7 +203,7 @@ int read_triggers(const char *path) {
 			return 0;
 		}
 	} else {
-		read_triggerfile( path );
+		return read_triggerfile( path );
 	}
 }
 
@@ -258,6 +258,16 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 				 * to avoid changing back to the original mode
 				 */
 				break;
+			} else if (et->cmdline[0] == '<' ) {
+				char *keyname = &(et->cmdline[1]);
+				fprintf(stderr, "Sending event: %s\n", keyname);
+				int type = lookup_event_type( keyname );
+				int code = lookup_event_code( keyname );
+				if (type && code) {
+					send_event( type, code, 1 );
+					send_event( type, code, 0 );
+					send_event( EV_SYN, 0, 0 );
+				}
 			} else {
 				int pid = fork();
 				if (pid == 0 ) {

@@ -14,4 +14,5 @@ struct command {
 	/* udev pathnames are long, but not that long */
 	char param[256];
 	int fd;
+	int exclusive;
 };

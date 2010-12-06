@@ -6,5 +6,5 @@ const char *lookup_event_name(const struct input_event ev);
 const char *lookup_type_name_i(const int evtype);
 const char *lookup_type_name(const struct input_event ev);
 
-const int lookup_event_code(const char *eventname);
-const int lookup_event_type(const char *eventname);
+int lookup_event_code(const char *eventname);
+int lookup_event_type(const char *eventname);

@@ -1,4 +1,3 @@
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -7,14 +6,18 @@
 #include <sys/un.h>
 #include <strings.h>
 #include <getopt.h>
+#include <unistd.h>
 
 #include "devices.h"
 #include "command.h"
 #include "cmdsocket.h"
 
+#include "version.h"
+
 void show_help(void) {
+	fprintf( stderr, "Triggerhappy command " TH_VERSION "\n");
 	fprintf( stderr, "Use:\n");
-	fprintf( stderr, "  th-cmd --socket <socket> [--passfd] --add <devices...>\n");
+	fprintf( stderr, "  th-cmd --socket <socket> [--grab] [--passfd] --add <devices...>\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --remove <devices...>\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --clear\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --enable\n");
@@ -27,6 +30,7 @@ void show_help(void) {
 int main(int argc, char *argv[]) {
 	char *socket = NULL;
 	static int passfd = 0;
+	static int grab_dev = 0;
 	static int op_add = 0;
 	static int op_rem = 0;
 	static int op_clear = 0;
@@ -44,6 +48,7 @@ int main(int argc, char *argv[]) {
 		{ "clear", 0, &op_clear, 1 },
 		{ "udev", 0, &op_udev, 1 },
 		{ "passfd", 0, &passfd, 1 },
+		{ "grab", 0, &grab_dev, 1 },
 		{ "enable", 0, &op_en, 1 },
 		{ "disable", 0, &op_dis, 1 },
 		{ "mode", 0, &op_mode, 1 },
@@ -97,7 +102,7 @@ int main(int argc, char *argv[]) {
 		}
 		char *dev = getenv("DEVNAME");
 		if ( ctype && dev ) {
-			err = send_command( s, ctype, dev, passfd );
+			err = send_command( s, ctype, dev, passfd, grab_dev );
 		}
 	} else {
 		/* get devices from command line */
@@ -117,17 +122,17 @@ int main(int argc, char *argv[]) {
 			case CMD_ENABLE:
 			case CMD_DISABLE:
 			case CMD_QUIT:
-				err = send_command( s, ctype, "", 0 );
+				err = send_command( s, ctype, "", 0, 0);
 				break;
 			case CMD_CHANGEMODE:
 				err = send_command( s, ctype,
 						(optind < argc) ? argv[optind] : "",
-						0 );
+						0, 0 );
 				break;
 			case CMD_ADD:
 			case CMD_REMOVE:
 				while (optind < argc && err == 0) {
-					err = send_command( s, ctype, argv[optind++], passfd );
+					err = send_command( s, ctype, argv[optind++], passfd, grab_dev );
 				}
 				break;
 			default:

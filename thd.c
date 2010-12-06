@@ -31,10 +31,16 @@
 #include "cmdsocket.h"
 #include "obey.h"
 #include "ignore.h"
+#include "uinput.h"
+
+/* version information */
+#include "version.h"
 
 /* command channel & FD */
 static char *cmd_file = NULL;
 static int cmd_fd = -1;
+
+static char *uinput_dev = NULL;
 
 static int dump_events = 0;
 static int run_as_daemon = 0;
@@ -114,7 +120,6 @@ static int read_event( device *dev ) {
 
 static void check_device( device *d ) {
 	int fd = d->fd;
-	char *dev = d->devname;
 	if (FD_ISSET( fd, &rfds )) {
 		if (read_event( d )) {
 			/* read error? Remove the device! */
@@ -193,12 +198,13 @@ static struct option long_options[] = {
 	{"socket",	required_argument, 0, 's'},
 	{"ignore",	required_argument, 0, 'i'},
 	{"help",	no_argument, 0, 'h'},
+	{"uinput",	required_argument, 0, '<'},
 	{"listevents",	no_argument, 0, 'l'},
 	{0,0,0,0} /* end of list */
 };
 
 void show_help(void) {
-	printf( "Triggerhappy event daemon\n\n" );
+	printf( "Triggerhappy event daemon " TH_VERSION "\n\n" );
 	printf( "Usage:\n" );
 	printf( "  thd [switches] [devices]\n\n" );
 	printf( "Command line switches:\n" );
@@ -229,6 +235,7 @@ static void list_events(void) {
 }
 
 void cleanup(void) {
+	close_uinput();
 	if (cmd_file) {
 		if (cmd_fd != -1) {
 			close( cmd_fd );
@@ -264,6 +271,55 @@ static void handle_signal(int sig) {
 			reload_conf = 1;
 			break;
 	}
+}
+
+int start_readers(int argc, char *argv[], int start) {
+	if (argc-start < 1 && cmd_file == NULL) {
+		fprintf(stderr, "No input device files or command pipe specified.\n");
+		return 1;
+	}
+	/* open command pipe */
+	if (cmd_file) {
+		cmd_fd = bind_cmdsocket(cmd_file);
+		if (cmd_fd < 0) {
+			return 1;
+		}
+	}
+
+	/* add every device file supplied on command line */
+	int i;
+	for (i=start; i<argc; i++) {
+		char *dev = argv[i];
+		/* TODO we should provide a method to optionally grab the device */
+		int grab_dev = 0;
+		add_device( dev, -1, grab_dev );
+	}
+	if (run_as_daemon) {
+		int err = daemon(0,0);
+		if (err) {
+			perror("daemon()");
+		}
+	}
+	if (pidfile) {
+		write_pidfile( pidfile );
+	}
+	/* drop privileges */
+	if (user) {
+		struct passwd *pw = getpwnam(user);
+		if (pw) {
+			if ( setuid( pw->pw_uid ) ) {
+				perror("setuid");
+				return 1;
+			}
+		} else {
+			fprintf(stderr, "Unknown username '%s'.\n", user);
+			return 1;
+		}
+	}
+
+	process_events();
+
+	return 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -311,6 +367,9 @@ int main(int argc, char *argv[]) {
 			case 'u':
 				user = optarg;
 				break;
+			case '<':
+				uinput_dev = optarg;
+				break;
 			case '?':
 			default:
 				return 1;
@@ -324,6 +383,11 @@ int main(int argc, char *argv[]) {
 	init_keystate_holder(&keystate);
 	/* set initial trigger mode */
 	change_trigger_mode("");
+	/* open uinput if requested */
+	if (uinput_dev != NULL && open_uinput(uinput_dev) == -1) {
+		fprintf(stderr, "Error setting up uinput support\n");
+		return 1;
+	}
 	/* install signal handler */
 	struct sigaction handler;
 	handler.sa_handler = handle_signal;
@@ -338,49 +402,3 @@ int main(int argc, char *argv[]) {
 	return status;
 }
 
-int start_readers(int argc, char *argv[], int start) {
-	if (argc-start < 1 && cmd_file == NULL) {
-		fprintf(stderr, "No input device files or command pipe specified.\n");
-		return 1;
-	}
-	/* open command pipe */
-	if (cmd_file) {
-		cmd_fd = bind_cmdsocket(cmd_file);
-		if (cmd_fd < 0) {
-			return 1;
-		}
-	}
-
-	/* add every device file supplied on command line */
-	int i;
-	for (i=start; i<argc; i++) {
-		char *dev = argv[i];
-		add_device( dev, -1 );
-	}
-	if (run_as_daemon) {
-		int err = daemon(0,0);
-		if (err) {
-			perror("daemon()");
-		}
-	}
-	if (pidfile) {
-		write_pidfile( pidfile );
-	}
-	/* drop privileges */
-	if (user) {
-		struct passwd *pw = getpwnam(user);
-		if (pw) {
-			if ( setuid( pw->pw_uid ) ) {
-				perror("setuid");
-				return 1;
-			}
-		} else {
-			fprintf(stderr, "Unknown username '%s'.\n", user);
-			return 1;
-		}
-	}
-
-	process_events();
-
-	return 0;
-}

@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #include "devices.h"
 #include "command.h"
@@ -41,19 +42,21 @@ int connect_cmdsocket( char *name ) {
 }
 
 struct command *read_command( int cmd_fd ) {
-	struct msghdr msg = {0};
 	struct command *cmd = malloc(sizeof(struct command));
 
 	int fd[1] = {-1};
 	char buffer[CMSG_SPACE(sizeof fd)];
 
-	struct iovec v;
-	v.iov_base = cmd;
-	v.iov_len = sizeof(*cmd);
-	msg.msg_iov = &v;
-	msg.msg_iovlen = 1;
-	msg.msg_control = buffer;
-	msg.msg_controllen = sizeof(buffer);
+	struct iovec v = {
+		.iov_base = cmd,
+		.iov_len  = sizeof(*cmd)
+	};
+	struct msghdr msg = {
+		.msg_iov        = &v,
+		.msg_iovlen     = 1,
+		.msg_control    = buffer,
+		.msg_controllen = sizeof(buffer)
+	};
 
 	int done = recvmsg( cmd_fd, &msg, 0 );
 
@@ -71,25 +74,28 @@ struct command *read_command( int cmd_fd ) {
 	return cmd;
 }
 
-int send_command( int cmd_fd, enum command_type type, char *param, int passfd ) {
-	struct command cmd;
-	cmd.fd = -1;
+int send_command( int cmd_fd, enum command_type type, char *param, int passfd, int exclusive ) {
 	if (type == CMD_ADD && passfd == 1) {
 		type = CMD_PASSFD;
 	}
-	cmd.type = type;
+	struct command cmd = {
+		.fd    = -1,
+		.exclusive = exclusive,
+		.type  = type,
+		.param = {0}
+	};
 	if (param != NULL) {
 		strcpy(cmd.param, param);
-	} else {
-		cmd.param[0] = '\0';
 	}
 
-	struct msghdr m = {0};
-	struct iovec v;
-	v.iov_base = &cmd;
-	v.iov_len = sizeof(cmd);
-	m.msg_iov = &v;
-	m.msg_iovlen = 1;
+	struct iovec v = {
+		.iov_base = &cmd,
+		.iov_len = sizeof(cmd)
+	};
+	struct msghdr m = {
+		.msg_iov    = &v,
+		.msg_iovlen = 1
+	};
 
 	/* add FD */
 	if (passfd) {

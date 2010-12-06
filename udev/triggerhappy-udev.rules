@@ -1,2 +1,8 @@
-# open new input devices and pass the file descriptor to the triggerhappy daemon
-ACTION=="add", SUBSYSTEM=="input", RUN+="/usr/sbin/th-cmd --socket /var/run/thd.socket --passfd --udev"
+## open new input devices and pass the file descriptor to the triggerhappy daemon
+ACTION=="add", SUBSYSTEM=="input", \
+	SYSFS{name}!="triggerhappy", \
+	RUN+="/usr/sbin/th-cmd --socket /var/run/thd.socket --passfd --udev"
+## add device exclusively
+#ACTION=="add", SUBSYSTEM=="input", \
+#	SYSFS{name}=="Nintendo Wiimote", \
+#	RUN+="/usr/sbin/th-cmd --socket /var/run/thd.socket --passfd --udev --grab"

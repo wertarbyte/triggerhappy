@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <linux/input.h>
+#include <string.h>
 #include "eventnames.h"
 #include "eventtable.h"
 
@@ -25,7 +26,7 @@ const char *lookup_type_name( const struct input_event ev ) {
 	return lookup_type_name_i( ev.type );
 }
 
-const int lookup_event_code( const char *eventname ) {
+int lookup_event_code( const char *eventname ) {
 	int i = 0;
 	while (i < KEY_MAX) {
 		if (KEY_NAME[i] != NULL &&
@@ -45,7 +46,7 @@ const int lookup_event_code( const char *eventname ) {
 	return -1;
 }
 
-const int lookup_event_type( const char *eventname ) {
+int lookup_event_type( const char *eventname ) {
 	int i = 0;
 	while (i<KEY_MAX) {
 		if (KEY_NAME[i] != NULL &&

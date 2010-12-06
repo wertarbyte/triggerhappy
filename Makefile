@@ -3,7 +3,9 @@ DESTDIR:=/
 BINDIR:=$(DESTDIR)/$(PREFIX)/sbin/
 MANDIR:=$(DESTDIR)/$(PREFIX)/share/man/man1/
 
-THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore
+VERSION:=$(shell cat version.inc)
+
+THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore uinput
 THCMD_COMPS := th-cmd cmdsocket
 
 MAKEDEPEND = $(CC) -M -MG $(CPPFLAGS) -o $*.d $<
@@ -22,16 +24,20 @@ th-cmd: $(THCMD_COMPS:%=%.o)
 	pod2man \
 		--center="Triggerhappy daemon" \
 		--section=1 \
-		--release="" \
+		--release="$(VERSION)" \
 		$< > $@
 
 evtable_%.h: $(LINUX_INPUT_H)
 	awk '/^#define $*_/ && $$2 !~ /_(MAX|CNT|VERSION)$$/ {print "EV_MAP("$$2"),"}' $< > $@
 
+version.h: version.inc
+	sed -r 's!(.*)!#define TH_VERSION "\1"!' $< > $@
+
 clean:
 	rm -f *.d
 	rm -f *.o
 	rm -f evtable_*.h
+	rm -f version.h
 	rm -f thd th-cmd
 	rm -f thd.1 th-cmd.1
 
