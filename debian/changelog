@@ -1,3 +1,12 @@
+triggerhappy (0.2.0-1) unstable; urgency=low
+
+  * optionally grab the device exclusively
+  * add uinput support for generating synthetic events
+  * update udev rule
+  * add version information into build
+
+ -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Mon, 06 Dec 2010 01:15:00 +0100
+
 triggerhappy (0.1.6-2) unstable; urgency=low
 
   * change manpage sections according to "man 7 man-pages"
