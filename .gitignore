@@ -16,3 +16,6 @@ version.h
 /debian/triggerhappy.prerm.debhelper
 /debian/triggerhappy.substvars
 /debian/triggerhappy/
+
+/.pc/
+/debian/patches/
