@@ -12,7 +12,10 @@
 #include "command.h"
 #include "cmdsocket.h"
 
+#include "version.h"
+
 void show_help(void) {
+	fprintf( stderr, "Triggerhappy command " TH_VERSION "\n");
 	fprintf( stderr, "Use:\n");
 	fprintf( stderr, "  th-cmd --socket <socket> [--grab] [--passfd] --add <devices...>\n");
 	fprintf( stderr, "  th-cmd --socket <socket> --remove <devices...>\n");

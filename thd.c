@@ -33,6 +33,9 @@
 #include "ignore.h"
 #include "uinput.h"
 
+/* version information */
+#include "version.h"
+
 /* command channel & FD */
 static char *cmd_file = NULL;
 static int cmd_fd = -1;
@@ -201,7 +204,7 @@ static struct option long_options[] = {
 };
 
 void show_help(void) {
-	printf( "Triggerhappy event daemon\n\n" );
+	printf( "Triggerhappy event daemon " TH_VERSION "\n\n" );
 	printf( "Usage:\n" );
 	printf( "  thd [switches] [devices]\n\n" );
 	printf( "Command line switches:\n" );
