@@ -59,6 +59,9 @@ trigger* parse_trigger(char* line) {
 	if ( comment != NULL ) {
 		*comment = '\0';
 	}
+	if (strlen(line) == 0) {
+		return NULL;
+	}
 	char *cp = strdup(line);
 
 	char *delim = " \t\n";
