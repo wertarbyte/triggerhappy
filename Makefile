@@ -5,7 +5,7 @@ MANDIR:=$(DESTDIR)/$(PREFIX)/share/man/man1/
 
 VERSION:=$(shell cat version.inc)
 
-THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore uinput
+THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore uinput triggerparser
 THCMD_COMPS := th-cmd cmdsocket
 
 MAKEDEPEND = $(CC) -M -MG $(CPPFLAGS) -o $*.d $<

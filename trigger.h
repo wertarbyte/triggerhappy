@@ -8,7 +8,7 @@ typedef struct trigger {
 	int value;
 	trigger_modifier modifiers;
 	char *mode;
-	char *cmdline;
+	char *action;
 	struct trigger *next;
 } trigger;
 
