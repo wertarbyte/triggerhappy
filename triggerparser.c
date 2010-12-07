@@ -28,7 +28,18 @@ static int parse_evdef(char *evdef, trigger *t) {
 	int n = 0;
 	while (n < TRIGGER_MODIFIERS_MAX) {
 		char *s_mod = strtok_r(NULL, "+", &sptr);
-		t->modifiers[n] = s_mod ? lookup_event_code(s_mod) : -1;
+		if (s_mod == NULL) {
+			t->modifiers[n] = -1;
+		} else {
+			int type = lookup_event_type(s_mod);
+			int c = lookup_event_code(s_mod);
+			if (type == EV_KEY && c >= 0) {
+				t->modifiers[n] = c;
+			} else {
+				/* we cannot process this key code */
+				return 1;
+			}
+		}
 		n++;
 	}
 
