@@ -127,6 +127,16 @@ int read_triggers(const char *path) {
 	}
 }
 
+static int devtag_equal(const char *d_tag, const char *t_tag) {
+	if (strlen(t_tag) == 0) {
+		return 1;
+	}
+	if (strcmp(t_tag, d_tag) == 0) {
+		return 1;
+	}
+	return 0;
+}
+
 static int mods_equal(keystate_holder ksh, trigger_modifier tm, int ignore_key) {
 	int n = 0;
 	while ( n < TRIGGER_MODIFIERS_MAX ) {
@@ -158,9 +168,11 @@ static int correct_mode( const char *tmode ) {
 	return (tmode == NULL) || (strcmp( get_trigger_mode(), tmode ) == 0);
 }
 
-void run_triggers(int type, int code, int value, keystate_holder ksh) {
+void run_triggers(int type, int code, int value, keystate_holder ksh, device *dev) {
 	if (triggers_are_enabled == 0) {
 		return;
+	}
+	if (dev && dev->tag) {
 	}
 	trigger *et = trigger_list;
 	while (et != NULL) {
@@ -169,6 +181,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 		     value == et->value &&
 		     et->action &&
 		     correct_mode( et->mode ) &&
+		     devtag_equal(&(dev->tag[0]), &(et->devtag[0])) &&
 		     mods_equal(ksh, et->modifiers, (type==EV_KEY?code:-1) )) {
 			fprintf(stderr, "Executing trigger action: %s\n", et->action);
 			/* switch trigger mode or execute program? */

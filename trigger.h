@@ -17,7 +17,7 @@ typedef struct trigger {
 trigger* parse_trigger(char* line);
 void append_trigger(trigger *t);
 int read_triggers(const char *filename);
-void run_triggers(int type, int code, int value, keystate_holder ksh);
+void run_triggers(int type, int code, int value, keystate_holder ksh, device *dev);
 void clear_triggers();
 
 void triggers_enabled( int status );

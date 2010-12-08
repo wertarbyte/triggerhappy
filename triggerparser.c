@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include "eventnames.h"
 #include "keystate.h"
+#include "devices.h"
 #include "trigger.h"
 #include "triggerparser.h"
 
@@ -20,6 +21,16 @@ static int parse_evdef(char *evdef, trigger *t) {
 	}
 	/* place a copy of the mode string or NULL in the struct */
 	t->mode = (mode ? strdup(mode) : NULL);
+
+	/* The evdef event now might still contain a device tag enclosed in < > */
+	t->devtag[0] = '\0';
+	char *tmp = strchr(evdef, '>');
+	if (tmp && evdef[0] == '<') {
+		*tmp = '\0';
+		strncpy(t->devtag, &evdef[1], TH_DEVICE_TAG_LENGTH);
+		t->devtag[TH_DEVICE_TAG_LENGTH-1] = '\0';
+		evdef = tmp+1; /* point evdef to the beginning of the event */
+	}
 
 	/* now we can start to separate the triggering event from the modifiers */
 	char *sptr = NULL;
