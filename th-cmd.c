@@ -41,6 +41,8 @@ int main(int argc, char *argv[]) {
 	static int op_quit = 0;
 	enum command_type ctype = -1;
 
+	char *tag = NULL;
+
 	static struct option long_options[] = {
 		{ "socket", 1, 0, 's' },
 		{ "add", 0, &op_add, 1 },
@@ -54,19 +56,23 @@ int main(int argc, char *argv[]) {
 		{ "mode", 0, &op_mode, 1 },
 		{ "quit", 0, &op_quit, 1 },
 		{ "help", 0, 0, 'h' },
+		{ "tag", required_argument, 0, 't' },
 		{ 0, 0, 0, 0 }
 	};
 
 	int c;
 	while (1) {
 		int option_index = 0;
-		c = getopt_long(argc, argv, "s:", long_options, &option_index);
+		c = getopt_long(argc, argv, "s:t:", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
 		switch(c) {
 			case 's':
 				socket = optarg;
+				break;
+			case 't':
+				tag = optarg;
 				break;
 			case 'h':
 			case '?':
@@ -102,7 +108,7 @@ int main(int argc, char *argv[]) {
 		}
 		char *dev = getenv("DEVNAME");
 		if ( ctype && dev ) {
-			err = send_command( s, ctype, dev, passfd, grab_dev );
+			err = send_command( s, ctype, dev, passfd, grab_dev, NULL );
 		}
 	} else {
 		/* get devices from command line */
@@ -122,17 +128,17 @@ int main(int argc, char *argv[]) {
 			case CMD_ENABLE:
 			case CMD_DISABLE:
 			case CMD_QUIT:
-				err = send_command( s, ctype, "", 0, 0);
+				err = send_command( s, ctype, "", 0, 0, tag);
 				break;
 			case CMD_CHANGEMODE:
 				err = send_command( s, ctype,
 						(optind < argc) ? argv[optind] : "",
-						0, 0 );
+						0, 0, tag );
 				break;
 			case CMD_ADD:
 			case CMD_REMOVE:
 				while (optind < argc && err == 0) {
-					err = send_command( s, ctype, argv[optind++], passfd, grab_dev );
+					err = send_command( s, ctype, argv[optind++], passfd, grab_dev, tag );
 				}
 				break;
 			default:

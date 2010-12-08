@@ -7,11 +7,11 @@
 
 int obey_command( struct command *cmd ) {
 	if (cmd->type == CMD_ADD) {
-		add_device( &(cmd->param[0]), -1, cmd->exclusive );
+		add_device( &(cmd->param[0]), -1, cmd->exclusive, cmd->tag );
 		return 0;
 	}
 	if (cmd->type == CMD_PASSFD) {
-		add_device( &(cmd->param[0]), cmd->fd, cmd->exclusive );
+		add_device( &(cmd->param[0]), cmd->fd, cmd->exclusive, cmd->tag );
 		return 0;
 	}
 	if (cmd->type == CMD_REMOVE) {

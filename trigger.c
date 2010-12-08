@@ -8,6 +8,7 @@
 #include <dirent.h>
 #include "eventnames.h"
 #include "keystate.h"
+#include "devices.h"
 #include "trigger.h"
 #include "uinput.h"
 

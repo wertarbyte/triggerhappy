@@ -43,7 +43,7 @@ int device_is_suitable(int fd) {
 	);
 }
 
-void add_device(char *dev, int fd, int excl) {
+void add_device(char *dev, int fd, int excl, char *tag) {
 	device **p = &device_list;
 	// find end of list
 	while (*p != NULL) {
@@ -71,6 +71,10 @@ void add_device(char *dev, int fd, int excl) {
 		(*p)->descr = get_device_description(fd);
 		(*p)->fd = fd;
 		(*p)->exclusive = excl;
+		if (tag) {
+			strncpy((*p)->tag, tag, TH_DEVICE_TAG_LENGTH);
+			(*p)->tag[TH_DEVICE_TAG_LENGTH-1] = '\0';
+		}
 		(*p)->next = NULL;
 	} else {
 		fprintf( stderr, "Error opening '%s': %s\n", dev, strerror(errno) );

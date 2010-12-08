@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "devtag.h"
 #include "devices.h"
 #include "command.h"
 #include "cmdsocket.h"
@@ -74,7 +75,7 @@ struct command *read_command( int cmd_fd ) {
 	return cmd;
 }
 
-int send_command( int cmd_fd, enum command_type type, char *param, int passfd, int exclusive ) {
+int send_command( int cmd_fd, enum command_type type, char *param, int passfd, int exclusive, char *tag ) {
 	if (type == CMD_ADD && passfd == 1) {
 		type = CMD_PASSFD;
 	}
@@ -82,10 +83,16 @@ int send_command( int cmd_fd, enum command_type type, char *param, int passfd, i
 		.fd    = -1,
 		.exclusive = exclusive,
 		.type  = type,
-		.param = {0}
+		.param = {0},
+		.tag = {0}
 	};
 	if (param != NULL) {
-		strcpy(cmd.param, param);
+		strncpy(cmd.param, param, TH_COMMAND_PARAM_LENGTH);
+		cmd.param[TH_COMMAND_PARAM_LENGTH-1] = '\0';
+	}
+	if (tag != NULL) {
+		strncpy(cmd.tag, tag, TH_DEVICE_TAG_LENGTH);
+		cmd.tag[TH_DEVICE_TAG_LENGTH-1] = '\0';
 	}
 
 	struct iovec v = {

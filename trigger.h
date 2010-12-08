@@ -1,3 +1,4 @@
+#include "devtag.h"
 #define TRIGGER_MODIFIERS_MAX 5
 
 typedef int trigger_modifier[TRIGGER_MODIFIERS_MAX];
@@ -8,6 +9,7 @@ typedef struct trigger {
 	int value;
 	trigger_modifier modifiers;
 	char *mode;
+	char devtag[TH_DEVICE_TAG_LENGTH];
 	char *action;
 	struct trigger *next;
 } trigger;

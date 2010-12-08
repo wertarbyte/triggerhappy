@@ -1,0 +1,1 @@
+#define TH_DEVICE_TAG_LENGTH 256
