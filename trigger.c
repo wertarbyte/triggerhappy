@@ -58,12 +58,15 @@ static int read_triggerfile(const char *filename) {
 		return 1;
 	}
 	while ((read = getline(&line, &len, conf)) != -1) {
-		trigger *t = parse_trigger( line );
+		char *copy = strdup(line);
+		trigger *t = parse_trigger(copy);
 		if (t) {
-			append_trigger( t );
-		} else if (strlen(line) > 0) {
+			append_trigger(t);
+		} else if (strlen(copy) > 0) {
+			/* perhaps it was just an empty line */
 			fprintf(stderr, "Unable to parse trigger line: %s\n", line);
 		}
+		free(copy);
 	}
 	fclose(conf);
 	conf=NULL;
