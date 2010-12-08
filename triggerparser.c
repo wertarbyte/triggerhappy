@@ -77,7 +77,8 @@ trigger* parse_trigger(char* line) {
 		return NULL;
 	}
 	trigger *t = malloc( sizeof(trigger) );
-	memset( t, 0, sizeof(t) );
+	memset( t, 0, sizeof(*t) );
+	t->next = NULL;
 
 	t->value = atoi(s_value);
 
