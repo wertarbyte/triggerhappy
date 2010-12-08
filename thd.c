@@ -21,6 +21,7 @@
 #include <sys/un.h>
 #include <stddef.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include "thd.h"
 #include "eventnames.h"
@@ -307,8 +308,18 @@ int start_readers(int argc, char *argv[], int start) {
 	if (user) {
 		struct passwd *pw = getpwnam(user);
 		if (pw) {
-			if ( setuid( pw->pw_uid ) ) {
-				perror("setuid");
+			int uid = pw->pw_uid;
+			int gid = pw->pw_gid;
+			if ( initgroups(user, gid) ) {
+				perror("initgroups");
+				return 1;
+			}
+			if ( setregid( gid, gid ) ) {
+				perror("setregid");
+				return 1;
+			}
+			if ( setreuid( uid, uid ) ) {
+				perror("setreuid");
 				return 1;
 			}
 		} else {
