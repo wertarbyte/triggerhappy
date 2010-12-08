@@ -7,15 +7,15 @@
 
 int obey_command( struct command *cmd ) {
 	if (cmd->type == CMD_ADD) {
-		add_device( &(cmd->param[0]), -1, cmd->exclusive, cmd->tag );
+		add_device( cmd->param, -1, cmd->exclusive, cmd->tag );
 		return 0;
 	}
 	if (cmd->type == CMD_PASSFD) {
-		add_device( &(cmd->param[0]), cmd->fd, cmd->exclusive, cmd->tag );
+		add_device( cmd->param, cmd->fd, cmd->exclusive, cmd->tag );
 		return 0;
 	}
 	if (cmd->type == CMD_REMOVE) {
-		remove_device( &(cmd->param[0]) );
+		remove_device( cmd->param );
 		return 0;
 	}
 	if (cmd->type == CMD_QUIT) {
@@ -35,7 +35,7 @@ int obey_command( struct command *cmd ) {
 		return 0;
 	}
 	if (cmd->type == CMD_CHANGEMODE) {
-		change_trigger_mode( &(cmd->param[0] ) );
+		change_trigger_mode( cmd->param );
 		return 0;
 	}
 	return 1;
