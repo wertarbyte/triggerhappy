@@ -1,3 +1,14 @@
+triggerhappy (0.3.0-1) unstable; urgency=low
+
+  * rework config file parser
+  * improve error detection for modifiers
+  * improve error reporting
+  * improve dropping of privileges
+  * allow tagging of devices
+  * new upstream version 0.3.0
+
+ -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Fri, 10 Dec 2010 11:14:00 +0100
+
 triggerhappy (0.2.1-1) unstable; urgency=low
 
   * fix segmentation fault when handling comment lines
