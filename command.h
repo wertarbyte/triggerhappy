@@ -1,3 +1,6 @@
+#include "devtag.h"
+#define TH_COMMAND_PARAM_LENGTH 256
+
 enum command_type {
 	CMD_ADD,
 	CMD_REMOVE,
@@ -12,7 +15,8 @@ enum command_type {
 struct command {
 	enum command_type type;
 	/* udev pathnames are long, but not that long */
-	char param[256];
+	char param[TH_COMMAND_PARAM_LENGTH];
 	int fd;
 	int exclusive;
+	char tag[TH_DEVICE_TAG_LENGTH];
 };

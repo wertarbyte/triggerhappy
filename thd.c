@@ -21,6 +21,7 @@
 #include <sys/un.h>
 #include <stddef.h>
 #include <pwd.h>
+#include <grp.h>
 
 #include "thd.h"
 #include "eventnames.h"
@@ -112,7 +113,7 @@ static int read_event( device *dev ) {
 			print_event( devname, ev );
 			print_triggerline( ev, *keystate );
 		}
-		run_triggers( ev.type, ev.code, ev.value, *keystate );
+		run_triggers( ev.type, ev.code, ev.value, *keystate, dev );
 		change_keystate( *keystate, ev );
 	}
 	return 0;
@@ -290,9 +291,14 @@ int start_readers(int argc, char *argv[], int start) {
 	int i;
 	for (i=start; i<argc; i++) {
 		char *dev = argv[i];
-		/* TODO we should provide a method to optionally grab the device */
+		/* TODO
+		 * we should provide a method to
+		 * optionally grab the device or
+		 * assign a tag
+		 */
 		int grab_dev = 0;
-		add_device( dev, -1, grab_dev );
+		char *tag_dev = NULL;
+		add_device( dev, -1, grab_dev, tag_dev );
 	}
 	if (run_as_daemon) {
 		int err = daemon(0,0);
@@ -307,8 +313,18 @@ int start_readers(int argc, char *argv[], int start) {
 	if (user) {
 		struct passwd *pw = getpwnam(user);
 		if (pw) {
-			if ( setuid( pw->pw_uid ) ) {
-				perror("setuid");
+			int uid = pw->pw_uid;
+			int gid = pw->pw_gid;
+			if ( initgroups(user, gid) ) {
+				perror("initgroups");
+				return 1;
+			}
+			if ( setregid( gid, gid ) ) {
+				perror("setregid");
+				return 1;
+			}
+			if ( setreuid( uid, uid ) ) {
+				perror("setreuid");
 				return 1;
 			}
 		} else {

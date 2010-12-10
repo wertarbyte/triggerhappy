@@ -6,7 +6,7 @@ th-cmd -- triggerhappy commander
 
 =head1 SYNOPSIS
 
-B<th-cmd> --socket B<< <socket> >> [B<--passfd>] [B<--clear>|B<--enable>|B<--disable>|B<--mode> I<< <mode> >>|B<--quit>|B<--udev>|B<--add> F<< <devices...> >>|B<--remove> F<< <devices...> >>]
+B<th-cmd> --socket B<< <socket> >> [B<--passfd>] [B<--tag> I<< <foo> >>] [B<--clear>|B<--enable>|B<--disable>|B<--mode> I<< <mode> >>|B<--quit>|B<--udev>|B<--add> F<< <devices...> >>|B<--remove> F<< <devices...> >>]
 
 =head1 DESCRIPTION
 
@@ -59,6 +59,11 @@ Instead of instructing the daemon to open the device, open the device and pass t
 =item B<--grab>
 
 Grab the device; the triggerhappy daemon will try to get exclusive access to the device, other applications will not receive the events emitted by it.
+
+=item B<--tag> F<foo>
+
+Label the added device with the tag I<< <foo> >>; this can be used to limit the scope of event
+handlers to a subset of input devices.
 
 =back
 

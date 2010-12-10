@@ -8,8 +8,11 @@
 #include <dirent.h>
 #include "eventnames.h"
 #include "keystate.h"
+#include "devices.h"
 #include "trigger.h"
 #include "uinput.h"
+
+#include "triggerparser.h"
 
 static trigger *trigger_list = NULL;
 
@@ -25,102 +28,13 @@ void change_trigger_mode(const char *mode) {
 	if (trigger_mode != NULL) {
 		free(trigger_mode);
 		/* suppress the message on the first change to default mode */
-		fprintf(stderr, "Changing trigger mode to <%s>\n", trigger_mode);
+		fprintf(stderr, "Changing trigger mode to <%s>\n", mode);
 	}
 	trigger_mode = strdup(mode);
 }
 
 void triggers_enabled( int status ) {
 	triggers_are_enabled = status;
-}
-
-static int strint(const char *str) {
-	if (str == NULL) {
-		return -1;
-	} else {
-		return atoi(str);
-	}
-}
-
-/* copy token */
-static char* ct(char *token) {
-	if (token == NULL) {
-		return NULL;
-	} else {
-		return strdup(token);
-	}
-}
-
-trigger* parse_trigger(char* line) {
-	char *sptr = NULL;
-
-	/* ignore everything behind # */
-	char *comment = strchr(line, '#');
-	if ( comment != NULL ) {
-		*comment = '\0';
-	}
-	if (strlen(line) == 0) {
-		return NULL;
-	}
-	char *cp = strdup(line);
-
-	char *delim = " \t\n";
-
-	char *evdef = strtok_r(cp, delim, &sptr);
-	/* extract mode (if any) */
-	char *mode = NULL;
-	if (evdef) {
-		char *mode_delim = index(evdef, '@');
-		if (mode_delim) {
-			mode = strdup( &(mode_delim[1]) );
-			*mode_delim = '\0'; /* cut it off */
-		}
-	}
-	/* extract modifier */
-	char *sptr2 = NULL;
-	char *evname = ct( strtok_r(evdef, "+", &sptr2) );
-	/* build array of modifier keycodes */
-	trigger_modifier modifier;
-	int n = 0;
-	while (n < TRIGGER_MODIFIERS_MAX) {
-		char *evmod = strtok_r(NULL, "+", &sptr2);
-		modifier[n] = evmod ? lookup_event_code(evmod) : -1;
-		n++;
-	}
-	int value = strint( strtok_r(NULL, delim, &sptr) );
-	char *cmdline = strtok_r(NULL, "\n", &sptr);
-	if (cmdline) {
-		/* remove whitespaces at the end */
-		char *end = cmdline + strlen(cmdline) - 1;
-		while (end >= cmdline && isspace(*end)) {
-			end--;
-		}
-		*(end+1) = '\0';
-	}
-	char *cmd = ct( cmdline );
-	free(cp);
-	cp = NULL;
-
-	/* all fields filled? */
-	if (evname && cmd && (value >= 0)) {
-		trigger *et = malloc( sizeof(trigger) );
-		et->type = lookup_event_type( evname );
-		et->code = lookup_event_code( evname );
-		et->value = value;
-		et->cmdline = cmd;
-		et->mode = mode;
-		/* store modifier state */
-		memcpy(et->modifiers, modifier, sizeof(trigger_modifier));
-		et->next = NULL;
-		free(evname);
-		evname = NULL;
-		return et;
-	} else {
-		free(evname);
-		free(cmd);
-		free(mode);
-		return NULL;
-	}
 }
 
 void append_trigger(trigger *t) {
@@ -145,12 +59,15 @@ static int read_triggerfile(const char *filename) {
 		return 1;
 	}
 	while ((read = getline(&line, &len, conf)) != -1) {
-		trigger *t = parse_trigger( line );
+		char *copy = strdup(line);
+		trigger *t = parse_trigger(copy);
 		if (t) {
-			append_trigger( t );
-		} else if (strlen(line) > 0) {
+			append_trigger(t);
+		} else if (strlen(copy) > 0) {
+			/* perhaps it was just an empty line */
 			fprintf(stderr, "Unable to parse trigger line: %s\n", line);
 		}
+		free(copy);
 	}
 	fclose(conf);
 	conf=NULL;
@@ -210,6 +127,16 @@ int read_triggers(const char *path) {
 	}
 }
 
+static int devtag_equal(const char *d_tag, const char *t_tag) {
+	if (strlen(t_tag) == 0) {
+		return 1;
+	}
+	if (strcmp(t_tag, d_tag) == 0) {
+		return 1;
+	}
+	return 0;
+}
+
 static int mods_equal(keystate_holder ksh, trigger_modifier tm, int ignore_key) {
 	int n = 0;
 	while ( n < TRIGGER_MODIFIERS_MAX ) {
@@ -241,28 +168,31 @@ static int correct_mode( const char *tmode ) {
 	return (tmode == NULL) || (strcmp( get_trigger_mode(), tmode ) == 0);
 }
 
-void run_triggers(int type, int code, int value, keystate_holder ksh) {
+void run_triggers(int type, int code, int value, keystate_holder ksh, device *dev) {
 	if (triggers_are_enabled == 0) {
 		return;
+	}
+	if (dev && dev->tag) {
 	}
 	trigger *et = trigger_list;
 	while (et != NULL) {
 		if ( type  == et->type &&
 		     code  == et->code &&
 		     value == et->value &&
-		     et->cmdline &&
+		     et->action &&
 		     correct_mode( et->mode ) &&
+		     devtag_equal(&(dev->tag[0]), &(et->devtag[0])) &&
 		     mods_equal(ksh, et->modifiers, (type==EV_KEY?code:-1) )) {
-			fprintf(stderr, "Executing trigger: %s\n", et->cmdline);
+			fprintf(stderr, "Executing trigger action: %s\n", et->action);
 			/* switch trigger mode or execute program? */
-			if (et->cmdline[0] == '@') {
-				change_trigger_mode( &(et->cmdline)[1] );
+			if (et->action[0] == '@') {
+				change_trigger_mode( &(et->action)[1] );
 				/* we now stop checking for additional triggers
 				 * to avoid changing back to the original mode
 				 */
 				break;
-			} else if (et->cmdline[0] == '<' ) {
-				char *keyname = &(et->cmdline[1]);
+			} else if (et->action[0] == '<' ) {
+				char *keyname = &(et->action[1]);
 				fprintf(stderr, "Sending event: %s\n", keyname);
 				int type = lookup_event_type( keyname );
 				int code = lookup_event_code( keyname );
@@ -281,7 +211,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh) {
 					char ev[8];
 					sprintf( &(ev[0]), "%d", et->value );
 					setenv( "TH_VALUE", &(ev[0]), 1 );
-					system(	et->cmdline );
+					system(	et->action );
 					exit(0);
 				}
 			}
@@ -306,7 +236,7 @@ void clear_triggers() {
 	trigger **p = &trigger_list;
 	while ( *p != NULL ) {
 		trigger **n = &( (*p)->next );
-		free( (*p)->cmdline );
+		free( (*p)->action );
 		if ( (*p)->mode ) {
 			/* might be NULL */
 			free( (*p)->mode );

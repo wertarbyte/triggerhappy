@@ -1,12 +1,15 @@
+#include "devtag.h"
+
 typedef struct device {
 	int fd;
-	char* devname;
+	char *devname;
 	int exclusive;
-	char* descr;
+	char *descr;
+	char tag[TH_DEVICE_TAG_LENGTH];
 	struct device *next;
 } device;
 
-void add_device(char *dev, int fd, int excl);
+void add_device(char *dev, int fd, int excl, char *tag);
 int remove_device(char *dev);
 void clear_devices(void);
 int count_devices(void);
