@@ -18,7 +18,7 @@
 
 static device *device_list = NULL;
 
-static char *get_device_description(int fd) {
+char *get_device_description(int fd) {
 	char descr[256] = "Unknown";
 	if(ioctl(fd, EVIOCGNAME(sizeof(descr)), descr) < 0) {
 		perror("evdev ioctl");
@@ -68,7 +68,6 @@ void add_device(char *dev, int fd, int excl, char *tag) {
 		}
 		*p = malloc(sizeof(*device_list));
 		(*p)->devname = strdup(dev);
-		(*p)->descr = get_device_description(fd);
 		(*p)->fd = fd;
 		(*p)->exclusive = excl;
 		if (tag) {
@@ -90,7 +89,6 @@ int remove_device(char *dev) {
 			*p = copy->next;
 			close(copy->fd);
 			free(copy->devname);
-			free(copy->descr);
 			free(copy);
 			return 1;
 		}
@@ -106,7 +104,6 @@ void clear_devices(void) {
 	while (p != NULL) {
 		device *next = p->next;
 		close(p->fd);
-		free(p->descr);
 		free(p->devname);
 		free(p);
 		p = next;
