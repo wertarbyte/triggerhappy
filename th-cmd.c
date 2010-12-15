@@ -39,7 +39,7 @@ int main(int argc, char *argv[]) {
 	static int op_dis = 0;
 	static int op_mode = 0;
 	static int op_quit = 0;
-	enum command_type ctype = -1;
+	enum command_type ctype = CMD_NOP;
 
 	char *tag = NULL;
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 		else if (op_mode) ctype = CMD_CHANGEMODE;
 		else if (op_quit) ctype = CMD_QUIT;
 
-		if ( ctype == -1) {
+		if ( ctype == CMD_NOP) {
 			show_help();
 		}
 		switch (ctype) {

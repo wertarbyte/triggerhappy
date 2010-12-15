@@ -2,6 +2,7 @@
 #define TH_COMMAND_PARAM_LENGTH 256
 
 enum command_type {
+	CMD_NOP,
 	CMD_ADD,
 	CMD_REMOVE,
 	CMD_QUIT,
