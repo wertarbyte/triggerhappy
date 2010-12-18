@@ -4,7 +4,6 @@ typedef struct device {
 	int fd;
 	char *devname;
 	int exclusive;
-	char *descr;
 	char tag[TH_DEVICE_TAG_LENGTH];
 	struct device *next;
 } device;
@@ -15,3 +14,5 @@ void clear_devices(void);
 int count_devices(void);
 
 void for_each_device( void(*func)(device*) );
+
+char *get_device_description(int fd);
