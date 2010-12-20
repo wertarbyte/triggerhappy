@@ -235,16 +235,15 @@ int count_triggers( trigger **list ) {
 }
 
 void clear_triggers() {
-	trigger **p = &trigger_list;
-	while ( *p != NULL ) {
-		trigger **n = &( (*p)->next );
-		free( (*p)->action );
-		if ( (*p)->mode ) {
-			/* might be NULL */
-			free( (*p)->mode );
+	trigger *p = trigger_list;
+	while (p != NULL) {
+		trigger *next = p->next;
+		free(p->action);
+		if (p->mode) { /* might be NULL */
+			free(p->mode);
 		}
-		free( (*p) );
-		*p = NULL;
-		p = n;
+		free(p);
+		p = next;
 	}
+	trigger_list = NULL;
 }
