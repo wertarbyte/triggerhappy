@@ -105,8 +105,8 @@ trigger* parse_trigger(char* line) {
 		t->action = strdup(s_action);
 	} else {
 		/* free the allocated memory */
-		if (t->mode) free(t->mode);
-		if (t->action) free(t->action);
+		free(t->mode);
+		free(t->action);
 		free(t);
 		t = NULL;
 	}

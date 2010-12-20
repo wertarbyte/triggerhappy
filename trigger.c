@@ -239,9 +239,7 @@ void clear_triggers() {
 	while (p != NULL) {
 		trigger *next = p->next;
 		free(p->action);
-		if (p->mode) { /* might be NULL */
-			free(p->mode);
-		}
+		free(p->mode);
 		free(p);
 		p = next;
 	}
