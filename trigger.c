@@ -211,8 +211,10 @@ void run_triggers(int type, int code, int value, keystate_holder ksh, device *de
 					char ev[8];
 					sprintf( &(ev[0]), "%d", et->value );
 					setenv( "TH_VALUE", &(ev[0]), 1 );
-					system(	et->action );
+					system(et->action);
 					exit(0);
+				} else if (pid < 0) {
+					fprintf(stderr, "Unable to fork!\n");
 				}
 			}
 		}
