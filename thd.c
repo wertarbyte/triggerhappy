@@ -328,7 +328,7 @@ int start_readers(int argc, char *argv[], int start) {
 				return 1;
 			}
 		} else {
-			fprintf(stderr, "Unknown username '%s'.\n", user);
+			fprintf(stderr, "Unable to lookup user '%s'.\n", user);
 			return 1;
 		}
 	}
