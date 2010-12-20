@@ -105,14 +105,15 @@ int send_command( int cmd_fd, enum command_type type, char *param, int passfd, i
 	};
 
 	/* add FD */
+	int dev_fd[1] = { -1 };
+	char buffer[CMSG_SPACE(sizeof(dev_fd))];
 	if (passfd) {
 		int fd = open( param, O_RDONLY );
 		if (fd < 0) {
 			perror("open");
 			return 1;
 		}
-		int dev_fd[1] = { fd };
-		char buffer[CMSG_SPACE(sizeof(dev_fd))];
+		dev_fd[0] = fd ;
 		m.msg_control = buffer;
 		m.msg_controllen = sizeof(buffer);
 
