@@ -88,6 +88,10 @@ trigger* parse_trigger(char* line) {
 		return NULL;
 	}
 	trigger *t = malloc( sizeof(trigger) );
+	if (! t) {
+		fprintf(stderr, "Unable to allocate memory for trigger definition!\n");
+		return NULL;
+	}
 	memset( t, 0, sizeof(*t) );
 	t->next = NULL;
 
@@ -101,7 +105,7 @@ trigger* parse_trigger(char* line) {
 			end --;
 		}
 		*(end+1) = '\0';
-		/* now copy the strings (mode is already copied parse_evdef */
+		/* now copy the strings (mode is already copied in parse_evdef) */
 		t->action = strdup(s_action);
 	} else {
 		/* free the allocated memory */

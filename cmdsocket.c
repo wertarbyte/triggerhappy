@@ -44,6 +44,10 @@ int connect_cmdsocket( char *name ) {
 
 struct command *read_command( int cmd_fd ) {
 	struct command *cmd = malloc(sizeof(struct command));
+	if (! cmd) {
+		fprintf(stderr, "Unable to allocate memory for command!\n");
+		return NULL;
+	}
 
 	int fd[1] = {-1};
 	char buffer[CMSG_SPACE(sizeof fd)];

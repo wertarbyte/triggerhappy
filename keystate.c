@@ -9,6 +9,10 @@ void init_keystate_holder(keystate_holder **ksh) {
 	if (*ksh == NULL) {
 		*ksh = malloc(sizeof(keystate_holder));
 	}
+	if (*ksh == NULL) {
+		fprintf(stderr, "Unable to allocate memory for keystate table!\n");
+		return;
+	}
 	int i;
 	for (i=0; i<=KEY_MAX; i++) {
 		(**ksh)[i] = 0;
@@ -59,6 +63,8 @@ char *get_keystate_ignore_key(keystate_holder ksh, int ignore_key) {
 		}
 	}
 	char *res = malloc( sizeof(char) * (1+strlen(buf)) );
-	strcpy( res, buf );
+	if (res) {
+		strcpy( res, buf );
+	}
 	return res;
 }

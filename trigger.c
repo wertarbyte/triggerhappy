@@ -60,6 +60,10 @@ static int read_triggerfile(const char *filename) {
 	}
 	while ((read = getline(&line, &len, conf)) != -1) {
 		char *copy = strdup(line);
+		if (!copy) {
+			fprintf(stderr, "Error allocating memory for trigger parsing!\n");
+			break;
+		}
 		trigger *t = parse_trigger(copy);
 		if (t) {
 			append_trigger(t);
