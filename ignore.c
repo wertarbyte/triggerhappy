@@ -8,8 +8,12 @@ void ignore_key( int code, ignore **list ) {
 		p = &( (*p)->next );
 	}
 	*p = malloc( sizeof(ignore) );
-	(*p)->next = NULL;
-	(*p)->code = code;
+	if (*p) {
+		(*p)->next = NULL;
+		(*p)->code = code;
+	} else {
+		fprintf(stderr, "Unable to allocate memory for ignored key!\n");
+	}
 }
 
 void print_ignores( ignore *list ) {

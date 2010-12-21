@@ -60,6 +60,10 @@ static int read_triggerfile(const char *filename) {
 	}
 	while ((read = getline(&line, &len, conf)) != -1) {
 		char *copy = strdup(line);
+		if (!copy) {
+			fprintf(stderr, "Error allocating memory for trigger parsing!\n");
+			break;
+		}
 		trigger *t = parse_trigger(copy);
 		if (t) {
 			append_trigger(t);
@@ -211,8 +215,10 @@ void run_triggers(int type, int code, int value, keystate_holder ksh, device *de
 					char ev[8];
 					sprintf( &(ev[0]), "%d", et->value );
 					setenv( "TH_VALUE", &(ev[0]), 1 );
-					system(	et->action );
+					system(et->action);
 					exit(0);
+				} else if (pid < 0) {
+					fprintf(stderr, "Unable to fork!\n");
 				}
 			}
 		}
@@ -233,16 +239,13 @@ int count_triggers( trigger **list ) {
 }
 
 void clear_triggers() {
-	trigger **p = &trigger_list;
-	while ( *p != NULL ) {
-		trigger **n = &( (*p)->next );
-		free( (*p)->action );
-		if ( (*p)->mode ) {
-			/* might be NULL */
-			free( (*p)->mode );
-		}
-		free( (*p) );
-		*p = NULL;
-		p = n;
+	trigger *p = trigger_list;
+	while (p != NULL) {
+		trigger *next = p->next;
+		free(p->action);
+		free(p->mode);
+		free(p);
+		p = next;
 	}
+	trigger_list = NULL;
 }

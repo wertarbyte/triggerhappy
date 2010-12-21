@@ -25,13 +25,12 @@ int open_uinput(const char *path) {
 	device.id.product = 1;
 	device.id.version = 1;
 	if (write(uinput_fd,&device,sizeof(device)) != sizeof(device)) {
-		close(uinput_fd);
+		close_uinput();
 		return -1;
 	}
 
 	if (ioctl(uinput_fd,UI_SET_EVBIT,EV_KEY) < 0) {
-		close(uinput_fd);
-		uinput_fd = -1;
+		close_uinput();
 		return -1;
 	}
 
@@ -39,15 +38,13 @@ int open_uinput(const char *path) {
 	int i;
 	for (i=0; i<KEY_MAX && uinput_fd; i++) {
 		if (ioctl(uinput_fd, UI_SET_KEYBIT, i) < 0) {
-			close(uinput_fd);
-			uinput_fd = -1;
+			close_uinput();
 			return -1;
 		}
 	}
 
 	if (ioctl(uinput_fd, UI_DEV_CREATE) < 0) {
-		close(uinput_fd);
-		uinput_fd = -1;
+		close_uinput();
 		return -1;
 	}
 

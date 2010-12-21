@@ -66,8 +66,11 @@ void add_device(char *dev, int fd, int excl, char *tag) {
 				return;
 			}
 		}
-		*p = malloc(sizeof(*device_list));
+		*p = malloc(sizeof(device));
+		if (*p == NULL) goto nomem_cleanup;
+		memset(*p, 0, sizeof(device));
 		(*p)->devname = strdup(dev);
+		if ((*p)->devname == NULL) goto nomem_cleanup;
 		(*p)->fd = fd;
 		(*p)->exclusive = excl;
 		if (tag) {
@@ -78,6 +81,14 @@ void add_device(char *dev, int fd, int excl, char *tag) {
 	} else {
 		fprintf( stderr, "Error opening '%s': %s\n", dev, strerror(errno) );
 	}
+	return;
+nomem_cleanup:
+	fprintf(stderr, "Unable to allocate memory for new device!\n");
+	if (*p) {
+		free( (*p)->devname );
+	}
+	free(*p);
+	*p = NULL;
 }
 
 int remove_device(char *dev) {
