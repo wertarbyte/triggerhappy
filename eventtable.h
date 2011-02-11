@@ -13,6 +13,7 @@ static const char *EV_NAME[EV_MAX] = {
 
 static const char *KEY_NAME[KEY_MAX] = {
 #include "evtable_KEY.h"
+#include "evtable_BTN.h"
 };
 
 static const char *SW_NAME[SW_MAX] = {
