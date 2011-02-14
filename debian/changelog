@@ -1,3 +1,11 @@
+triggerhappy (0.3.3-1) unstable; urgency=low
+
+  [ Stefan Tomanek ]
+  * add licence headers to source files
+  * increase version to 0.3.3
+
+ -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Mon, 14 Feb 2011 13:15:54 +0100
+
 triggerhappy (0.3.2-1) unstable; urgency=low
 
   * increase version to 0.3.2
