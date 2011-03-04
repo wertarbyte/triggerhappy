@@ -81,11 +81,11 @@ static void print_event(char* dev, struct input_event ev) {
 
 static void print_triggerline(struct input_event ev, keystate_holder ksh) {
 	const char *evname = lookup_event_name( ev );
-	char *state = ( ev.type == EV_KEY ? get_keystate_ignore_key( ksh, ev.code ) : "");
-	const char *d = strlen(state)>0 ? "+" : "";
+	char *state = ( ev.type == EV_KEY ? get_keystate_ignore_key( ksh, ev.code ) : NULL);
+	const int d = (state && strlen(state)>0);
 	if ( evname != NULL ) {
 		if (ev.type == EV_KEY) {
-			printf( "# %s%s%s\t%d\tcommand\n", state, d, evname, ev.value );
+			printf( "# %s%s%s\t%d\tcommand\n", state?state:"", d?"+":"", evname, ev.value );
 		}
 		fflush(stdout);
 	}
