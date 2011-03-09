@@ -1,3 +1,10 @@
+triggerhappy (0.3.4-1) unstable; urgency=low
+
+  * fix segfault when dumping non-key events
+  * update udev rules (SYSFS->ATTRS)
+
+ -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Wed, 09 Mar 2011 14:50:48 +0100
+
 triggerhappy (0.3.3-1) unstable; urgency=low
 
   [ Stefan Tomanek ]
