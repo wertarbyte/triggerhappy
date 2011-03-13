@@ -10,14 +10,13 @@
 
 # Author: Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>
 
-# PATH should only include /usr/* if it runs after the mountnfs.sh script
 PATH=/sbin:/usr/sbin:/bin:/usr/bin
-DESC="input event daemon"     # Introduce a short description here
-NAME=thd                      # Introduce the short server's name here
-PNAME=triggerhappy            # Package name
-DAEMON=/usr/sbin/thd          # Introduce the server's location here
+DESC="input event daemon"
+NAME=thd
+PNAME=triggerhappy
+DAEMON=/usr/sbin/thd
 PIDFILE=/var/run/$NAME.pid
-DAEMON_ARGS="--daemon --triggers /etc/triggerhappy/triggers.d/ --socket /var/run/thd.socket --pidfile $PIDFILE --user nobody /dev/input/event*"     # Arguments to run the daemon with
+DAEMON_ARGS="--daemon --triggers /etc/triggerhappy/triggers.d/ --socket /var/run/thd.socket --pidfile $PIDFILE --user nobody /dev/input/event*"
 DAEMON_OPTS=""
 SCRIPTNAME=/etc/init.d/$PNAME
 
@@ -102,19 +101,11 @@ case "$1" in
        status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
        ;;
   reload|force-reload)
-	#
-	# If do_reload() is not implemented then leave this commented out
-	# and leave 'force-reload' as an alias for 'restart'.
-	#
 	log_daemon_msg "Reloading $DESC" "$NAME"
 	do_reload
 	log_end_msg $?
 	;;
   restart)
-	#
-	# If the "reload" option is implemented then remove the
-	# 'force-reload' alias
-	#
 	log_daemon_msg "Restarting $DESC" "$NAME"
 	do_stop
 	case "$?" in
