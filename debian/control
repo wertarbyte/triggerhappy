@@ -3,7 +3,7 @@ Section: utils
 Priority: extra
 Maintainer: Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>
 Build-Depends: debhelper (>= 7)
-Standards-Version: 3.9.1
+Standards-Version: 3.9.2
 Homepage: http://github.com/wertarbyte/triggerhappy
 Vcs-Git: git://github.com/wertarbyte/triggerhappy.git
 Vcs-Browser: http://github.com/wertarbyte/triggerhappy

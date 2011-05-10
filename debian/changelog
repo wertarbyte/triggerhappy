@@ -1,3 +1,10 @@
+triggerhappy (0.3.4-2) unstable; urgency=low
+
+  * beautify packaging information
+  * First upload to Debian (Closes: #603842)
+
+ -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Wed, 13 Apr 2011 21:02:29 +0200
+
 triggerhappy (0.3.4-1) unstable; urgency=low
 
   * fix segfault when dumping non-key events
@@ -58,7 +65,6 @@ triggerhappy (0.1.6-2) unstable; urgency=low
 
   * change manpage sections according to "man 7 man-pages"
   * drop root privileges by default
-  * create Debian package (Closes: #603842)
 
  -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Mon, 22 Nov 2010 09:12:18 +0100
 
