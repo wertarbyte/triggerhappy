@@ -216,6 +216,7 @@ void run_triggers(int type, int code, int value, keystate_holder ksh, device *de
 				int pid = fork();
 				if (pid == 0 ) {
 					/* adjust environment */
+					setenv( "TH_DEVICE", dev->devname, 1 );
 					setenv( "TH_KEYSTATE", get_keystate(ksh), 1 );
 					const char *en = lookup_event_name_i( et->type, et->code );
 					setenv( "TH_EVENT", en, 1 );
