@@ -111,6 +111,10 @@ trigger* parse_trigger(char* line) {
 			end --;
 		}
 		*(end+1) = '\0';
+		/* remove leading whitespaces as well */
+		while (isspace(*s_action)) {
+			s_action++;
+		}
 		/* now copy the strings (mode is already copied in parse_evdef) */
 		t->action = strdup(s_action);
 	} else {
