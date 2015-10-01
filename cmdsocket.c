@@ -15,6 +15,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
+
 #include "devtag.h"
 #include "devices.h"
 #include "command.h"
@@ -22,6 +26,14 @@
 
 int bind_cmdsocket( char *name ) {
 	int cmd_fd;
+
+#ifdef HAVE_SYSTEMD
+	if (sd_listen_fds(0) == 1) {
+		fprintf(stderr, SD_DEBUG "Found socket passed from systemd\n");
+		return SD_LISTEN_FDS_START + 0;
+	}
+#endif
+
 	struct sockaddr_un addr;
 	/* remove any stale files */
 	struct stat sb;

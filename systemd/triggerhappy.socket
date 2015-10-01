@@ -1,0 +1,5 @@
+[Socket]
+ListenStream=/run/thd.socket
+
+[Install]
+WantedBy=sockets.target

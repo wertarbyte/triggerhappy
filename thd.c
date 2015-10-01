@@ -24,6 +24,10 @@
 #include <pwd.h>
 #include <grp.h>
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
+
 #include "thd.h"
 #include "eventnames.h"
 #include "devices.h"
@@ -333,6 +337,10 @@ int start_readers(int argc, char *argv[], int start) {
 			return 1;
 		}
 	}
+
+#ifdef HAVE_SYSTEMD
+	sd_notify(0, "READY=1");
+#endif
 
 	process_events();
 
