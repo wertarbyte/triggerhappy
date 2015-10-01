@@ -4,5 +4,6 @@ th-cmd
 th-cmd.1
 *.o
 /*.d
-evtable_*.h
+evtable_*.inc
+linux_input_defs_gen.inc
 version.h

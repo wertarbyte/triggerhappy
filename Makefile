@@ -10,8 +10,6 @@ THCMD_COMPS := th-cmd cmdsocket
 
 MAKEDEPEND = $(CC) -M -MG $(CPPFLAGS) -o $*.d $<
 
-LINUX_INPUT_H := $(shell echo '\#include <linux/input.h>' | $(CC) $(CPPFLAGS) -M -E - | awk 'NR==1 {print $$2}')
-
 all: thd th-cmd man
 
 man: thd.1 th-cmd.1
@@ -27,7 +25,10 @@ th-cmd: $(THCMD_COMPS:%=%.o)
 		--release="$(VERSION)" \
 		$< > $@
 
-evtable_%.h: $(LINUX_INPUT_H)
+linux_input_defs_gen.inc:
+	echo "#include <linux/input.h>" | $(CC) $(CPPFLAGS) -dM -E - > $@
+
+evtable_%.inc: linux_input_defs_gen.inc
 	awk '/^#define $*_/ && $$2 !~ /_(MAX|CNT|VERSION)$$/ {print "EV_MAP("$$2"),"}' $< > $@
 
 version.h: version.inc
@@ -36,7 +37,8 @@ version.h: version.inc
 clean:
 	rm -f *.d
 	rm -f *.o
-	rm -f evtable_*.h
+	rm -f linux_input_defs_gen.inc
+	rm -f evtable_*.inc
 	rm -f version.h
 	rm -f thd th-cmd
 	rm -f thd.1 th-cmd.1
