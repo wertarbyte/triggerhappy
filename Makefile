@@ -10,7 +10,7 @@ THCMD_COMPS := th-cmd cmdsocket
 
 MAKEDEPEND = $(CC) -M -MG $(CPPFLAGS) -o $*.d $<
 
-LINUX_INPUT_H := $(shell echo '\#include <linux/input.h>' | $(CC) $(CPPFLAGS) -M -E - | awk 'NR==1 {print $$2}')
+LINUX_INPUT_H := $(shell echo '\#include <linux/input.h>' | $(CC) $(CPPFLAGS) -M -E - | grep -o '[^ ]*linux/input.h')
 
 all: thd th-cmd man
 
