@@ -3,6 +3,17 @@ DESTDIR:=/
 BINDIR:=$(DESTDIR)/$(PREFIX)/sbin/
 MANDIR:=$(DESTDIR)/$(PREFIX)/share/man/man1/
 
+PKGCONFIG = pkg-config
+HAVE_PKGCONFIG = $(shell $(PKGCONFIG) --version 2>/dev/null || echo no)
+ifneq ($(HAVE_PKGCONFIG),no)
+HAVE_SYSTEMD = $(shell $(PKGCONFIG) --exists libsystemd && echo 1 || echo 0)
+ifeq ($(HAVE_SYSTEMD),1)
+CPPFLAGS += -DHAVE_SYSTEMD=1
+CFLAGS += $(shell $(PKGCONFIG) --cflags libsystemd)
+LDLIBS += $(shell $(PKGCONFIG) --libs libsystemd)
+endif
+endif
+
 VERSION:=$(shell cat version.inc)
 
 THD_COMPS := thd keystate trigger eventnames devices cmdsocket obey ignore uinput triggerparser
