@@ -29,7 +29,7 @@ linux_input_defs_gen.inc:
 	echo "#include <linux/input.h>" | $(CC) $(CPPFLAGS) -dM -E - > $@
 
 evtable_%.inc: linux_input_defs_gen.inc
-	awk '/^#define $*_/ && $$2 !~ /_(MAX|CNT|VERSION)$$/ {print "EV_MAP("$$2"),"}' $< > $@
+	awk '/^#define $*_/ && $$2 !~ /_(MIN_INTERESTING|MAX|CNT|VERSION)$$/ {print "EV_MAP("$$2"),"}' $< > $@
 
 version.h: version.inc
 	sed -r 's!(.*)!#define TH_VERSION "\1"!' $< > $@
