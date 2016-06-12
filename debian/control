@@ -2,11 +2,11 @@ Source: triggerhappy
 Section: utils
 Priority: extra
 Maintainer: Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>
-Build-Depends: debhelper (>= 7)
-Standards-Version: 3.9.2
-Homepage: http://github.com/wertarbyte/triggerhappy
-Vcs-Git: git://github.com/wertarbyte/triggerhappy.git
-Vcs-Browser: http://github.com/wertarbyte/triggerhappy
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: https://github.com/wertarbyte/triggerhappy
+Vcs-Git: https://github.com/wertarbyte/triggerhappy.git
+Vcs-Browser: https://github.com/wertarbyte/triggerhappy
 
 Package: triggerhappy
 Architecture: any

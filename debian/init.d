@@ -6,6 +6,7 @@
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: triggerhappy hotkey daemon
+# Description:       triggerhappy hotkey daemon
 ### END INIT INFO
 
 # Author: Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>

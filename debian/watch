@@ -1,2 +1,2 @@
 version=3
-http://githubredir.debian.net/github/wertarbyte/triggerhappy/ release/(.*).tar.gz
+https://github.com/wertarbyte/triggerhappy/tags .*/(.*)\.tar\.gz
