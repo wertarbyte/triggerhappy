@@ -85,9 +85,7 @@ static void print_triggerline(struct input_event ev, keystate_holder ksh) {
 	char *state = ( ev.type == EV_KEY ? get_keystate_ignore_key( ksh, ev.code ) : NULL);
 	const int d = (state && strlen(state)>0);
 	if ( evname != NULL ) {
-		if (ev.type == EV_KEY) {
-			printf( "# %s%s%s\t%d\tcommand\n", state?state:"", d?"+":"", evname, ev.value );
-		}
+		printf( "# %s%s%s\t%d\tcommand\n", state?state:"", d?"+":"", evname, ev.value );
 		fflush(stdout);
 	}
 	free(state);
@@ -105,8 +103,8 @@ static int read_event( device *dev ) {
 		fprintf(stderr, "Error reading device '%s'\n", dev->devname);
 		return 1;
 	}
-	/* ignore all events except KEY and SW */
-	if (ev.type == EV_KEY || ev.type == EV_SW) {
+	/* ignore all events except KEY, SW and REL*/
+	if (ev.type == EV_KEY || ev.type == EV_SW || ev.type == EV_REL) {
 		if (ev.type == EV_KEY && is_ignored( ev.code, ignored_keys)) {
 			return 0;
 		}
@@ -220,20 +218,20 @@ void show_help(void) {
 	printf( "  --user <name>      Drop privileges to <name> after opening devices\n" );
 }
 
-static void list_events(void) {
+static void list_event_table(int type, int max) {
 	int n = 0;
-	for (n = 0; n < KEY_MAX; n++) {
-		const char *name = lookup_event_name_i( EV_KEY, n );
+	for (n = 0; n < max; n++) {
+		const char *name = lookup_event_name_i(type, n);
 		if (name) {
-			printf( "%s\n", name );
+			printf("%s\n", name);
 		}
 	}
-	for (n = 0; n < SW_MAX; n++) {
-		const char *name = lookup_event_name_i( EV_SW, n );
-		if (name) {
-			printf( "%s\n", name );
-		}
-	}
+}
+
+static void list_events(void) {
+	list_event_table(EV_KEY, KEY_MAX);
+	list_event_table(EV_SW, SW_MAX);
+	list_event_table(EV_REL, REL_MAX);
 }
 
 void cleanup(void) {

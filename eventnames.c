@@ -17,6 +17,9 @@ const char *lookup_event_name_i( const int evtype, const int evcode ) {
 	if (evtype == EV_SW) {
 		return (SW_MAX >= evcode ? SW_NAME[ evcode ] : NULL);
 	}
+	if (evtype == EV_REL) {
+		return (REL_MAX >= evcode ? REL_NAME[ evcode ] : NULL);
+	}
 	return NULL;
 }
 
@@ -49,6 +52,14 @@ int lookup_event_code( const char *eventname ) {
 		}
 		i++;
 	}
+	i = 0;
+	while (i<REL_MAX) {
+		if (REL_NAME[i] != NULL &&
+		    strcmp(eventname, REL_NAME[i]) == 0) {
+			return i;
+		}
+		i++;
+	}
 	return -1;
 }
 
@@ -65,6 +76,13 @@ int lookup_event_type( const char *eventname ) {
 	while (i<SW_MAX) {
 		if (SW_NAME[i] != NULL &&
 		    strcmp(eventname, SW_NAME[i]) == 0) {
+			return EV_SW;
+		}
+		i++;
+	}
+	while (i<REL_MAX) {
+		if (REL_NAME[i] != NULL &&
+		    strcmp(eventname, REL_NAME[i]) == 0) {
 			return EV_SW;
 		}
 		i++;
