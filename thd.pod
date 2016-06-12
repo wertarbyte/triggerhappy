@@ -57,6 +57,10 @@ Open uinput file (probably F</dev/input/uinput>) to generate synthetic events.
 
 Ignore key and switch event labeled I<eventname>. This can be used to suppress the FN key on some notebooks which only generates events sometimes and might screw up key combinations.
 
+=item B<--normalize>
+
+Normalize REL events. If this option is enabled, the values of relative movement events are mapped to the three values -1, 0 and 1, depending on the sign of the value reported by the kernel.
+
 =item B<--user> I<name>
 
 Change to user id I<name> after opening files. This usually prevents thd from opening additional input devices, unless they are opened by the th-cmd program and their file descriptor are passed to the daemon.

@@ -54,6 +54,8 @@ static keystate_holder *keystate = NULL;
 
 static ignore *ignored_keys = NULL;
 
+static int normalize_events = 0;
+
 static char *user = NULL;
 
 static int exiting = 0;
@@ -107,6 +109,13 @@ static int read_event( device *dev ) {
 	if (ev.type == EV_KEY || ev.type == EV_SW || ev.type == EV_REL) {
 		if (ev.type == EV_KEY && is_ignored( ev.code, ignored_keys)) {
 			return 0;
+		}
+		if (ev.type == EV_REL && normalize_events) {
+			if (ev.value > 0) {
+				ev.value = 1;
+			} else if (ev.value < 0) {
+				ev.value = -1;
+			}
 		}
 		if (dump_events) {
 			print_event( devname, ev );
@@ -197,6 +206,7 @@ static struct option long_options[] = {
 	{"triggers",	required_argument, 0, 't'},
 	{"socket",	required_argument, 0, 's'},
 	{"ignore",	required_argument, 0, 'i'},
+	{"normalize",	no_argument, &normalize_events, 1},
 	{"help",	no_argument, 0, 'h'},
 	{"uinput",	required_argument, 0, '<'},
 	{"listevents",	no_argument, 0, 'l'},
@@ -215,6 +225,7 @@ void show_help(void) {
 	printf( "  --triggers <file>  Load trigger definitions from <file>\n" );
 	printf( "  --socket <socket>  Read commands from socket\n" );
 	printf( "  --ignore <event>   Ignore key events with name <event>\n" );
+	printf( "  --normalize        Normalize relative movement events\n" );
 	printf( "  --user <name>      Drop privileges to <name> after opening devices\n" );
 }
 
@@ -342,7 +353,7 @@ int main(int argc, char *argv[]) {
 	int option_index = 0;
 	int c;
 	while (1) {
-		c = getopt_long (argc, argv, "t:s:dhpi:u:", long_options, &option_index);
+		c = getopt_long (argc, argv, "t:s:dhpni:u:", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
