@@ -1,40 +1,17 @@
-This work was packaged for Debian by:
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: triggerhappy
+Maintainer-Contact: Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>
+Source: https://github.com/wertarbyte/triggerhappy
 
-    Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de> on Sat, 23 Oct 2010 10:59:38 +0200
+Files: *
+Copyright: 2010-2016, Stefan Tomanek
+License: GPL-3+
 
-It was downloaded from:
-
-    http://github.com/wertarbyte/triggerhappy
-
-Upstream Author:
-
-    Stefan Tomanek <stefan.tomanek+th@wertarbyte.de>
-
-Copyright:
-
-    Copyright (C) 2010 Stefan Tomanek
-
-License:
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This package is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-On Debian systems, the complete text of the GNU General
-Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
-
-The Debian packaging is:
-
-    Copyright (C) 2010 Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>
-
-and is licensed under the GPL version 3, see above.
-
+License: GPL-3+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU General Public License as published by the
+ Free Software Foundation; either version 3, or (at your option) any
+ later version.
+ .
+ On Debian systems, the complete text of version 3 of the GNU General
+ Public License can be found in `/usr/share/common-licenses/GPL-3'.
