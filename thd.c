@@ -24,6 +24,10 @@
 #include <pwd.h>
 #include <grp.h>
 
+#ifdef HAVE_SYSTEMD
+#include <systemd/sd-daemon.h>
+#endif
+
 #include "thd.h"
 #include "eventnames.h"
 #include "devices.h"
@@ -53,6 +57,8 @@ static char *pidfile = NULL;
 static keystate_holder *keystate = NULL;
 
 static ignore *ignored_keys = NULL;
+
+static int normalize_events = 0;
 
 static char *user = NULL;
 
@@ -85,9 +91,7 @@ static void print_triggerline(struct input_event ev, keystate_holder ksh) {
 	char *state = ( ev.type == EV_KEY ? get_keystate_ignore_key( ksh, ev.code ) : NULL);
 	const int d = (state && strlen(state)>0);
 	if ( evname != NULL ) {
-		if (ev.type == EV_KEY) {
-			printf( "# %s%s%s\t%d\tcommand\n", state?state:"", d?"+":"", evname, ev.value );
-		}
+		printf( "# %s%s%s\t%d\tcommand\n", state?state:"", d?"+":"", evname, ev.value );
 		fflush(stdout);
 	}
 	free(state);
@@ -105,10 +109,17 @@ static int read_event( device *dev ) {
 		fprintf(stderr, "Error reading device '%s'\n", dev->devname);
 		return 1;
 	}
-	/* ignore all events except KEY and SW */
-	if (ev.type == EV_KEY || ev.type == EV_SW) {
+	/* ignore all events except KEY, SW and REL*/
+	if (ev.type == EV_KEY || ev.type == EV_SW || ev.type == EV_REL) {
 		if (ev.type == EV_KEY && is_ignored( ev.code, ignored_keys)) {
 			return 0;
+		}
+		if (ev.type == EV_REL && normalize_events) {
+			if (ev.value > 0) {
+				ev.value = 1;
+			} else if (ev.value < 0) {
+				ev.value = -1;
+			}
 		}
 		if (dump_events) {
 			print_event( devname, ev );
@@ -199,6 +210,7 @@ static struct option long_options[] = {
 	{"triggers",	required_argument, 0, 't'},
 	{"socket",	required_argument, 0, 's'},
 	{"ignore",	required_argument, 0, 'i'},
+	{"normalize",	no_argument, &normalize_events, 1},
 	{"help",	no_argument, 0, 'h'},
 	{"uinput",	required_argument, 0, '<'},
 	{"listevents",	no_argument, 0, 'l'},
@@ -217,23 +229,24 @@ void show_help(void) {
 	printf( "  --triggers <file>  Load trigger definitions from <file>\n" );
 	printf( "  --socket <socket>  Read commands from socket\n" );
 	printf( "  --ignore <event>   Ignore key events with name <event>\n" );
+	printf( "  --normalize        Normalize relative movement events\n" );
 	printf( "  --user <name>      Drop privileges to <name> after opening devices\n" );
 }
 
-static void list_events(void) {
+static void list_event_table(int type, int max) {
 	int n = 0;
-	for (n = 0; n < KEY_MAX; n++) {
-		const char *name = lookup_event_name_i( EV_KEY, n );
+	for (n = 0; n < max; n++) {
+		const char *name = lookup_event_name_i(type, n);
 		if (name) {
-			printf( "%s\n", name );
+			printf("%s\n", name);
 		}
 	}
-	for (n = 0; n < SW_MAX; n++) {
-		const char *name = lookup_event_name_i( EV_SW, n );
-		if (name) {
-			printf( "%s\n", name );
-		}
-	}
+}
+
+static void list_events(void) {
+	list_event_table(EV_KEY, KEY_MAX);
+	list_event_table(EV_SW, SW_MAX);
+	list_event_table(EV_REL, REL_MAX);
 }
 
 void cleanup(void) {
@@ -334,6 +347,10 @@ int start_readers(int argc, char *argv[], int start) {
 		}
 	}
 
+#ifdef HAVE_SYSTEMD
+	sd_notify(0, "READY=1");
+#endif
+
 	process_events();
 
 	return 0;
@@ -344,7 +361,7 @@ int main(int argc, char *argv[]) {
 	int option_index = 0;
 	int c;
 	while (1) {
-		c = getopt_long (argc, argv, "t:s:dhpi:u:", long_options, &option_index);
+		c = getopt_long (argc, argv, "t:s:dhpni:u:", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}

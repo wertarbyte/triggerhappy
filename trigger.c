@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -215,12 +216,17 @@ void run_triggers(int type, int code, int value, keystate_holder ksh, device *de
 				int pid = fork();
 				if (pid == 0 ) {
 					/* adjust environment */
+					setenv( "TH_DEVICE", dev->devname, 1 );
 					setenv( "TH_KEYSTATE", get_keystate(ksh), 1 );
 					const char *en = lookup_event_name_i( et->type, et->code );
 					setenv( "TH_EVENT", en, 1 );
 					char ev[8];
 					sprintf( &(ev[0]), "%d", et->value );
 					setenv( "TH_VALUE", &(ev[0]), 1 );
+					/* default SIGCHLD is not automatically
+					   restored and most applications would
+					   fail if this signal is ignored */
+					signal(SIGCHLD, SIG_DFL);
 					system(et->action);
 					exit(0);
 				} else if (pid < 0) {

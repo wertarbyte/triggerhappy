@@ -9,14 +9,18 @@
 #define EV_MAP( N ) [ N ] = #N
 
 static const char *EV_NAME[EV_MAX] = {
-#include "evtable_EV.h"
+#include "evtable_EV.inc"
 };
 
 static const char *KEY_NAME[KEY_MAX] = {
-#include "evtable_KEY.h"
-#include "evtable_BTN.h"
+#include "evtable_KEY.inc"
+#include "evtable_BTN.inc"
+};
+
+static const char *REL_NAME[REL_MAX] = {
+#include "evtable_REL.inc"
 };
 
 static const char *SW_NAME[SW_MAX] = {
-#include "evtable_SW.h"
+#include "evtable_SW.inc"
 };

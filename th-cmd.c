@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
 		}
 		char *dev = getenv("DEVNAME");
 		if ( ctype && dev ) {
-			err = send_command( s, ctype, dev, passfd, grab_dev, NULL );
+			err = send_command( s, ctype, dev, passfd, grab_dev, tag );
 		}
 	} else {
 		/* get devices from command line */
