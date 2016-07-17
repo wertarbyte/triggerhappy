@@ -1,3 +1,13 @@
+triggerhappy (0.4.0-2) unstable; urgency=low
+
+  * add build dependency for linux-libc-dev
+  * add build dependency for pkg-config
+  * add systemd dependencies and support files
+  * enable hardening flags in debian/rules
+  * refine debian/watch pattern
+
+ -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Tue, 26 Jul 2016 11:37:03 +0200
+
 triggerhappy (0.4.0-1) unstable; urgency=low
 
   * update to new upstream version 0.4.0 (Closes: #827079, #769184, #652120)
