@@ -1,2 +1,2 @@
 version=3
-https://github.com/wertarbyte/triggerhappy/tags .*/(.*)\.tar\.gz
+https://github.com/wertarbyte/triggerhappy/tags .*/archive/release/(.*)\.tar\.gz
