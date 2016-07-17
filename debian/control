@@ -2,14 +2,14 @@ Source: triggerhappy
 Section: utils
 Priority: extra
 Maintainer: Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>
-Build-Depends: debhelper (>= 9)
+Build-Depends: debhelper (>= 9), linux-libc-dev
 Standards-Version: 3.9.8
 Homepage: https://github.com/wertarbyte/triggerhappy
 Vcs-Git: https://github.com/wertarbyte/triggerhappy.git
 Vcs-Browser: https://github.com/wertarbyte/triggerhappy
 
 Package: triggerhappy
-Architecture: any
+Architecture: linux-any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: global hotkey daemon for Linux
  Triggerhappy watches connected input devices for certain key presses
