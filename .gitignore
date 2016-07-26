@@ -7,16 +7,3 @@ th-cmd.1
 evtable_*.inc
 linux_input_defs_gen.inc
 version.h
-
-# buildpackage stuff
-/debian/files
-/debian/triggerhappy.debhelper.log
-/debian/triggerhappy.postinst.debhelper
-/debian/triggerhappy.postrm.debhelper
-/debian/triggerhappy.preinst.debhelper
-/debian/triggerhappy.prerm.debhelper
-/debian/triggerhappy.substvars
-/debian/triggerhappy/
-
-/.pc/
-/debian/patches/
