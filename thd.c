@@ -110,11 +110,11 @@ static int read_event( device *dev ) {
 		return 1;
 	}
 	/* ignore all events except KEY, SW and REL*/
-	if (ev.type == EV_KEY || ev.type == EV_SW || ev.type == EV_REL) {
+	if (ev.type == EV_KEY || ev.type == EV_SW || ev.type == EV_REL || ev.type == EV_ABS) {
 		if (ev.type == EV_KEY && is_ignored( ev.code, ignored_keys)) {
 			return 0;
 		}
-		if (ev.type == EV_REL && normalize_events) {
+		if ((ev.type == EV_REL || ev.type == EV_ABS) && normalize_events) {
 			if (ev.value > 0) {
 				ev.value = 1;
 			} else if (ev.value < 0) {
@@ -247,6 +247,7 @@ static void list_events(void) {
 	list_event_table(EV_KEY, KEY_MAX);
 	list_event_table(EV_SW, SW_MAX);
 	list_event_table(EV_REL, REL_MAX);
+	list_event_table(EV_ABS, REL_MAX);
 }
 
 void cleanup(void) {

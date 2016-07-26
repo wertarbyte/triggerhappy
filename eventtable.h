@@ -21,6 +21,10 @@ static const char *REL_NAME[REL_MAX] = {
 #include "evtable_REL.inc"
 };
 
+static const char *ABS_NAME[ABS_MAX] = {
+#include "evtable_ABS.inc"
+};
+
 static const char *SW_NAME[SW_MAX] = {
 #include "evtable_SW.inc"
 };

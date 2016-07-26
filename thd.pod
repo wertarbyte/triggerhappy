@@ -59,7 +59,7 @@ Ignore key and switch event labeled I<eventname>. This can be used to suppress t
 
 =item B<--normalize>
 
-Normalize REL events. If this option is enabled, the values of relative movement events are mapped to the three values -1, 0 and 1, depending on the sign of the value reported by the kernel.
+Normalize REL and ABS events. If this option is enabled, the values of axis movement events are mapped to the three values -1, 0 and 1, depending on the sign of the value reported by the kernel.
 
 =item B<--user> I<name>
 
