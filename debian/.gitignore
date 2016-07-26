@@ -1,0 +1,12 @@
+# buildpackage stuff
+files
+triggerhappy.debhelper.log
+triggerhappy.postinst.debhelper
+triggerhappy.postrm.debhelper
+triggerhappy.preinst.debhelper
+triggerhappy.prerm.debhelper
+triggerhappy.substvars
+triggerhappy/
+
+.pc/
+patches/
