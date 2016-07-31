@@ -235,7 +235,7 @@ void show_help(void) {
 
 static void list_event_table(int type, int max) {
 	int n = 0;
-	for (n = 0; n < max; n++) {
+	for (n = 0; n <= max; n++) {
 		const char *name = lookup_event_name_i(type, n);
 		if (name) {
 			printf("%s\n", name);
