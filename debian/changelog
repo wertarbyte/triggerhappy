@@ -1,3 +1,9 @@
+triggerhappy (0.5.0-1) unstable; urgency=medium
+
+  * add new upstream release 0.5.0 (Closes: #834637, #835980)
+
+ -- Stefan Tomanek <stefan.tomanek+debian@wertarbyte.de>  Tue, 30 Aug 2016 09:26:25 +0200
+
 triggerhappy (0.4.0-2) unstable; urgency=low
 
   * add build dependency for linux-libc-dev
