@@ -7,3 +7,6 @@ Type=notify
 #ExecStart=/usr/sbin/thd --triggers /etc/triggerhappy/triggers.d/ --socket /run/thd.socket
 # Use wrapper script to open all available devices on startup
 ExecStart=/usr/lib/triggerhappy/thd_startup --triggers /etc/triggerhappy/triggers.d/ --socket /run/thd.socket
+
+[Install]
+WantedBy=multi-user.target
