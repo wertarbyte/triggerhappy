@@ -54,6 +54,7 @@ int lookup_event_code( const char *eventname ) {
 	if (res == -1) res = lookup_index(KEY_NAME, eventname, KEY_MAX);
 	if (res == -1) res = lookup_index(SW_NAME, eventname, SW_MAX);
 	if (res == -1) res = lookup_index(REL_NAME, eventname, REL_MAX);
+	if (res == -1) res = lookup_index(ABS_NAME, eventname, ABS_MAX);
 	return res;
 }
 
