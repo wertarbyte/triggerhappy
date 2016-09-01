@@ -39,7 +39,7 @@ const char *lookup_type_name( const struct input_event ev ) {
 
 static int lookup_index(const char **map, const char *value, int max) {
 	int i = 0;
-	while (i < max) {
+	while (i <= max) {
 		if (map[i] != NULL &&
 		    strcmp(value, map[i])  == 0) {
 			return i;
