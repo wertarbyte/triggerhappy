@@ -1,7 +1,0 @@
-#!/bin/sh
-#
-# /usr/lib/triggerhappy/thd_startup
-#
-# Start triggerhappy daemon with all available input devices
-#
-exec /usr/sbin/thd "$@" /dev/input/event*
