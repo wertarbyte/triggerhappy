@@ -151,7 +151,7 @@ int main(int argc, char *argv[]) {
 				err = 1;
 		}
 		if (err != 0) {
-			fprintf( stderr, "Error sending command\n");
+			perror("send_command");
 		}
 	}
 	close(s);

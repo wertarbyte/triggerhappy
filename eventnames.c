@@ -18,6 +18,8 @@ const char *lookup_event_name_i( const int evtype, const int evcode ) {
 			return (SW_MAX >= evcode ? SW_NAME[ evcode ] : NULL);
 		case EV_REL:
 			return (REL_MAX >= evcode ? REL_NAME[ evcode ] : NULL);
+		case EV_ABS:
+			return (ABS_MAX >= evcode ? ABS_NAME[ evcode ] : NULL);
 		default:
 			return NULL;
 	}
@@ -37,7 +39,7 @@ const char *lookup_type_name( const struct input_event ev ) {
 
 static int lookup_index(const char **map, const char *value, int max) {
 	int i = 0;
-	while (i < max) {
+	while (i <= max) {
 		if (map[i] != NULL &&
 		    strcmp(value, map[i])  == 0) {
 			return i;
@@ -52,6 +54,7 @@ int lookup_event_code( const char *eventname ) {
 	if (res == -1) res = lookup_index(KEY_NAME, eventname, KEY_MAX);
 	if (res == -1) res = lookup_index(SW_NAME, eventname, SW_MAX);
 	if (res == -1) res = lookup_index(REL_NAME, eventname, REL_MAX);
+	if (res == -1) res = lookup_index(ABS_NAME, eventname, ABS_MAX);
 	return res;
 }
 
@@ -64,6 +67,9 @@ int lookup_event_type( const char *eventname ) {
 	}
 	if (lookup_index(REL_NAME, eventname, REL_MAX) != -1) {
 		return EV_REL;
+	}
+	if (lookup_index(ABS_NAME, eventname, ABS_MAX) != -1) {
+		return EV_ABS;
 	}
 	return -1;
 }

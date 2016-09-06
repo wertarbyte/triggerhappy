@@ -12,6 +12,7 @@
 #include <string.h>
 #include <errno.h>
 #include <signal.h>
+#include <glob.h>
 
 #include <stdlib.h>
 #include <sys/wait.h>
@@ -110,11 +111,11 @@ static int read_event( device *dev ) {
 		return 1;
 	}
 	/* ignore all events except KEY, SW and REL*/
-	if (ev.type == EV_KEY || ev.type == EV_SW || ev.type == EV_REL) {
+	if (ev.type == EV_KEY || ev.type == EV_SW || ev.type == EV_REL || ev.type == EV_ABS) {
 		if (ev.type == EV_KEY && is_ignored( ev.code, ignored_keys)) {
 			return 0;
 		}
-		if (ev.type == EV_REL && normalize_events) {
+		if ((ev.type == EV_REL || ev.type == EV_ABS) && normalize_events) {
 			if (ev.value > 0) {
 				ev.value = 1;
 			} else if (ev.value < 0) {
@@ -214,6 +215,7 @@ static struct option long_options[] = {
 	{"help",	no_argument, 0, 'h'},
 	{"uinput",	required_argument, 0, '<'},
 	{"listevents",	no_argument, 0, 'l'},
+	{"deviceglob",	required_argument, 0, 'g'},
 	{0,0,0,0} /* end of list */
 };
 
@@ -231,11 +233,12 @@ void show_help(void) {
 	printf( "  --ignore <event>   Ignore key events with name <event>\n" );
 	printf( "  --normalize        Normalize relative movement events\n" );
 	printf( "  --user <name>      Drop privileges to <name> after opening devices\n" );
+	printf( "  --deviceglob <p>   Open device files matching pattern <p>\n" );
 }
 
 static void list_event_table(int type, int max) {
 	int n = 0;
-	for (n = 0; n < max; n++) {
+	for (n = 0; n <= max; n++) {
 		const char *name = lookup_event_name_i(type, n);
 		if (name) {
 			printf("%s\n", name);
@@ -247,6 +250,7 @@ static void list_events(void) {
 	list_event_table(EV_KEY, KEY_MAX);
 	list_event_table(EV_SW, SW_MAX);
 	list_event_table(EV_REL, REL_MAX);
+	list_event_table(EV_ABS, REL_MAX);
 }
 
 void cleanup(void) {
@@ -288,8 +292,8 @@ static void handle_signal(int sig) {
 	}
 }
 
-int start_readers(int argc, char *argv[], int start) {
-	if (argc-start < 1 && cmd_file == NULL) {
+int start_readers(int argc, char *argv[], int start, char *dev_glob) {
+	if (argc-start < 1 && cmd_file == NULL && dev_glob == NULL) {
 		fprintf(stderr, "No input device files or command pipe specified.\n");
 		return 1;
 	}
@@ -313,6 +317,16 @@ int start_readers(int argc, char *argv[], int start) {
 		int grab_dev = 0;
 		char *tag_dev = NULL;
 		add_device( dev, -1, grab_dev, tag_dev );
+	}
+	/* check device glob */
+	if (dev_glob) {
+		glob_t globbuf;
+		glob(dev_glob, GLOB_NOSORT, NULL, &globbuf);
+		for (i=0; i<globbuf.gl_pathc; i++) {
+			int grab_dev = 0;
+			char *tag_dev = NULL;
+			add_device(globbuf.gl_pathv[i], -1, grab_dev, tag_dev);
+		}
 	}
 	if (run_as_daemon) {
 		int err = daemon(0,0);
@@ -358,10 +372,11 @@ int start_readers(int argc, char *argv[], int start) {
 
 int main(int argc, char *argv[]) {
 	signal(SIGCHLD, SIG_IGN);
+	char *dev_glob = NULL;
 	int option_index = 0;
 	int c;
 	while (1) {
-		c = getopt_long (argc, argv, "t:s:dhpni:u:", long_options, &option_index);
+		c = getopt_long (argc, argv, "t:s:dhpni:u:g:", long_options, &option_index);
 		if (c == -1) {
 			break;
 		}
@@ -404,6 +419,9 @@ int main(int argc, char *argv[]) {
 			case '<':
 				uinput_dev = optarg;
 				break;
+			case 'g':
+				dev_glob = optarg;
+				break;
 			case '?':
 			default:
 				return 1;
@@ -431,7 +449,7 @@ int main(int argc, char *argv[]) {
 	sigaction(SIGTERM,&handler,0);
 	sigaction(SIGHUP,&handler,0);
 
-	int status = start_readers(argc, argv, optind);
+	int status = start_readers(argc, argv, optind, dev_glob);
 	cleanup();
 	return status;
 }
