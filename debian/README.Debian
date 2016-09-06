@@ -1,0 +1,15 @@
+Triggerhappy for Debian
+=======================
+
+User account
+------------
+
+By default, the triggerhappy daemon drops root privileges after startup and
+continues to run under the user id 'nobody'. This is also the account used to
+execute commands tied to input events. If those commands require elevated
+privileges, the user id of the daemon can be changed by modifying the startup
+command in the init script or the systemd service file by removing or changing
+the value of the argument "--user nobody".
+See systemd.unit(5) manpage for further details.
+
+ -- Stefan Tomanek <stefan.tomanek@wertarbyte.de>, Tue, 6 Sep 2016 22:36:57 +0200
