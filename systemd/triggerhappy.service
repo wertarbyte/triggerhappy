@@ -3,7 +3,6 @@ Description=triggerhappy global hotkey daemon
 After=local-fs.target
 
 [Service]
-Type=notify
 ExecStart=/usr/sbin/thd --triggers /etc/triggerhappy/triggers.d/ --socket /run/thd.socket --user nobody --deviceglob /dev/input/event*
 
 [Install]
