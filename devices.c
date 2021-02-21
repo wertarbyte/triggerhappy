@@ -45,7 +45,8 @@ int device_is_suitable(int fd) {
 	int rc = ioctl(fd, EVIOCGBIT(0,sizeof(bits)), bits);
 	return rc > 0 && (
 		/* we only consider devices with keys or switches suitable */
-		test_bit(EV_KEY, bits) || test_bit(EV_SW, bits)
+		test_bit(EV_KEY, bits) || test_bit(EV_SW, bits) ||
+		test_bit(EV_REL, bits) || test_bit(EV_ABS, bits)
 	);
 }
 
